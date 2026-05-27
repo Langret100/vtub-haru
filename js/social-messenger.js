@@ -375,9 +375,24 @@ var NotifySetting = (function () {
           window._notifyMenuBtn.textContent = getMenuLabel();
         }
         // FCM DB의 notify_mode 동기화 (iframe이므로 parent 경유)
+        // [BUG3 FIX] parent.FcmPush 접근 실패 시 window.FcmPush도 fallback으로 시도
+        // 두 경로 모두 실패하면 mute 설정이 DB에 반영 안 돼 알림이 계속 옴
         try {
-          var _fp = (window.parent && window.parent.FcmPush) || window.FcmPush;
-          if (_fp && typeof _fp.refreshRooms === "function") _fp.refreshRooms();
+          var _fp = (window.parent && window.parent !== window && window.parent.FcmPush)
+                 || window.FcmPush
+                 || (window.parent && window.parent.FcmPush);
+          if (_fp && typeof _fp.refreshRooms === "function") {
+            _fp.refreshRooms();
+          } else {
+            // FcmPush가 없는 환경: 짧은 지연 후 재시도
+            setTimeout(function () {
+              try {
+                var _fp2 = (window.parent && window.parent !== window && window.parent.FcmPush)
+                          || window.FcmPush;
+                if (_fp2 && typeof _fp2.refreshRooms === "function") _fp2.refreshRooms();
+              } catch (e2) {}
+            }, 1200);
+          }
         } catch (e) {}
         return;
       }
@@ -391,7 +406,7 @@ var NotifySetting = (function () {
   /* ── 캐릭터 정보 헬퍼 (parent.CHARACTERS 기반 동적 조회)
      - 하드코딩 없이 core.js의 CHARACTERS 정의를 그대로 재사용
      - 새 캐릭터가 추가되어도 이 코드 수정 불필요
-     - 우선순위: parent frame → localStorage → 기본값 "haru"
+     - 우선순위: parent frame → localStorage → 기본값 "mina"
   ─────────────────────────────────────────────────────────── */
 
   function getCharKey() {
@@ -404,7 +419,7 @@ var NotifySetting = (function () {
       var ck = localStorage.getItem("ghostCurrentCharacter");
       if (ck) return String(ck);
     } catch (e) {}
-    return "haru";
+    return "mina";
   }
 
   function getCharName() {
@@ -418,7 +433,7 @@ var NotifySetting = (function () {
       var chars = window.parent && window.parent.CHARACTERS;
       if (chars && chars[key] && chars[key].name) return String(chars[key].name);
     } catch (e) {}
-    return "하루";
+    return "미나";
   }
 
   /* ── 캐릭터 아이콘: parent.CHARACTERS[key].basePath + "기본대기1.png"
@@ -426,7 +441,7 @@ var NotifySetting = (function () {
   function getCharIcon() {
     try {
       var key = getCharKey();
-      var basePath = "images/emotions/"; // 기본값(하루)
+      var basePath = "images/emotions/"; // 기본값(미나)
       try {
         var chars = window.parent && window.parent.CHARACTERS;
         if (chars && chars[key] && chars[key].basePath) {
@@ -481,7 +496,7 @@ var NotifySetting = (function () {
       // 소리 + 진동 + TTS
       NotifySound.playDdiring();
       NotifySound.tryVibrate();
-      // TTS: "하루에게 새 글이 있어요"
+      // TTS: "미나에게 새 글이 있어요"
       speakNotify(charName);
     } else if (mode === "vibrate") {
       // 진동만
@@ -2327,10 +2342,17 @@ attachEvents();
           if (activeInRoom[safeUid]) return;
 
           // 3) 해당 방 구독자만 (방문한 적 있는 방)
+          // [BUG1 FIX] "global" 방 구독만으로는 다른 방(비번방 등) 알림을 받으면 안 됨.
+          //   - roomId가 "global"이면: rooms 목록에 "global"이 있으면 OK
+          //   - roomId가 특정 방이면: rooms 목록에 해당 roomId가 정확히 포함된 경우만 OK
+          //     (이전: rooms.indexOf("global") >= 0 조건으로 global 구독자가 모든 방 알림 수신)
           var rooms = String(v.rooms || "global").split(",");
-          var isSubscribed = rooms.indexOf(String(roomId)) >= 0
-            || (roomId === "global")
-            || rooms.indexOf("global") >= 0;
+          var isSubscribed;
+          if (String(roomId) === "global") {
+            isSubscribed = rooms.indexOf("global") >= 0;
+          } else {
+            isSubscribed = rooms.indexOf(String(roomId)) >= 0;
+          }
           if (!isSubscribed) return;
 
           tokens.push(v.token);
@@ -2342,7 +2364,7 @@ attachEvents();
         if (tokens.length === 0) return;
 
         // 캐릭터 정보 수집: games/ iframe이므로 parent 경유 (index.html의 core.js 변수)
-        var _fcmCharName = "하루";
+        var _fcmCharName = "미나";
         var _fcmCharIcon = "images/emotions/기본대기1.png";
         try {
           var _par = (window.parent && window.parent !== window) ? window.parent : window;
@@ -2381,6 +2403,8 @@ attachEvents();
 
   /* ── fcm_active_room 갱신은 __sendFcmPushNotify() 내에서 직접 처리됨 ── */
   /* (클로저 밖에서 switchRoom 패치 불가능하므로 패치 방식 제거) */
+
+  /* ── FCM 수신/알림 클릭 처리 ── */
 
   /* ── FCM 수신/알림 클릭 처리 ── */
   // 1) SW → index.html → gameFrame.postMessage 경로 (알림 클릭 시 방 이동)
