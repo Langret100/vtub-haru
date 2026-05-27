@@ -89,17 +89,15 @@
   function buildBlobsFrom(assets) {
     var urls = {};
     Object.keys(assets).forEach(function (k) {
-      var a = assets[k], blob;
+      var a = assets[k];
+      // blob: URL 대신 data: URL 사용 (HTTPS 환경에서 blob: URL은 XHR/fetch 불가)
       if (a.type === "binary" || a.type === "image/png") {
-        var bin = atob(a.data), arr = new Uint8Array(bin.length);
-        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-        blob = new Blob([arr], {
-          type: a.type === "image/png" ? "image/png" : "application/octet-stream"
-        });
+        var mime = a.type === "image/png" ? "image/png" : "application/octet-stream";
+        urls[k] = "data:" + mime + ";base64," + a.data;
       } else {
-        blob = new Blob([a.data], { type: "application/json" });
+        var b64 = btoa(unescape(encodeURIComponent(a.data)));
+        urls[k] = "data:application/json;base64," + b64;
       }
-      urls[k] = URL.createObjectURL(blob);
     });
     return urls;
   }
@@ -145,7 +143,9 @@
         return { Name: e.Name, File: blobUrls[e.File] || e.File };
       });
     }
-    return URL.createObjectURL(new Blob([JSON.stringify(o)], { type: "application/json" }));
+    var json = JSON.stringify(o);
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    return "data:application/json;base64," + b64;
   }
 
   /* ──────────────────────────────────────
