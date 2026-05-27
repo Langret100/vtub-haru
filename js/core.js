@@ -725,23 +725,16 @@ function boostWaveBackground() {
 
     // ------------- 감정 엔진 -------------
     function setGhostImage(src) {
+      // Live2D 활성화 중에는 정적 이미지 불필요 → 404 요청 차단
+      if (window._live2dActive) return;
       if (!ghostEl) return;
-      // 현재 캐릭터 스킨에 맞는 이미지 경로로 변환
-      const originalSrc = src;
       src = getCharImagePath(src);
       let img = ghostEl.querySelector("img");
       if (!img) {
         img = document.createElement("img");
         ghostEl.appendChild(img);
       }
-      img.onerror = () => {
-        // 한 번만 폴백을 적용하고, 더 이상 무한 반복되지 않도록 onerror 제거
-        img.onerror = null;
-        // 요청한 파일이 없을 때는 기본대기 이미지로 대체
-        const useSecond = /2\.png$/.test(originalSrc);
-        const fallbackFile = useSecond ? "기본대기2.png" : "기본대기1.png";
-        img.src = EMO_BASE_PATH + fallbackFile;
-      };
+      img.onerror = null; // 없는 파일 재요청 방지
       img.src = src;
       img.classList.add("active");
     }

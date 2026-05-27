@@ -537,6 +537,8 @@
   function updateCharacterSprite(){
     try {
       if (!charLayerEl) return;
+      // Live2D 활성화 중에는 정적 이미지 사용 안 함 → 404 요청 차단
+      if (window._live2dActive) return;
       var base = "images/emotions/기본대기1.png";
       var src = base;
 

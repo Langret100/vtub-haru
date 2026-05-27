@@ -60,6 +60,17 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
+  // Live2D 활성화 여부 확인 (부모/오프너 창 기준)
+  function isLive2DActive() {
+    try {
+      if (window.parent && window.parent !== window && window.parent._live2dActive) return true;
+    } catch (e) {}
+    try {
+      if (window.opener && !window.opener.closed && window.opener._live2dActive) return true;
+    } catch (e) {}
+    return false;
+  }
+
   // 부모/오프너/로컬스토리지의 캐릭터 설정을 이용해서 현재 캐릭터 이미지 경로로 변환
   function resolveImagePath(fileName) {
     const baseSrc = "images/emotions/" + fileName;
@@ -192,6 +203,14 @@
       clearInterval(frameTimer);
       frameTimer = null;
     }
+
+    // Live2D 활성화 중에는 정적 이미지 불필요 → 404 요청 차단
+    if (isLive2DActive()) {
+      imgEl.src = "";
+      imgEl.style.display = "none";
+      return;
+    }
+    imgEl.style.display = "";
 
     const frames = EMOTIONS[key] || EMOTIONS.idle;
     if (!frames || frames.length === 0) return;

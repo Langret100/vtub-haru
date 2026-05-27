@@ -126,6 +126,8 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
   var url = e.request.url;
+  // blob: / data: URL은 SW가 처리할 수 없으므로 제외 (Live2D blob URL 포함)
+  if (url.indexOf("blob:") === 0 || url.indexOf("data:") === 0) return;
   if (url.indexOf("script.google.com") > -1 ||
       url.indexOf("firebaseio.com") > -1 ||
       url.indexOf("googleapis.com") > -1 ||
