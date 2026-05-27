@@ -85,7 +85,7 @@ function _loadNotifyMode() {
   });
 }
 
-var CACHE_NAME = "mypai-v8";
+var CACHE_NAME = "mypai-v9";
 var CACHE_URLS = [
   "./",
   "./index.html",
