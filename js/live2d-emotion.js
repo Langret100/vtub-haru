@@ -412,14 +412,19 @@
         if (pending) { applyEmotion(pending); pending = null; }
 
         // 게임 모드 전환 감지 → ghostContainer position/z-index 갱신
-        var _gameModeObserver = new MutationObserver(function() {
+        function _applyGameMode() {
           var gc2 = document.getElementById("ghostContainer");
           if (!gc2) return;
           var gm = document.body.classList.contains("is-game-mode");
-          gc2.style.setProperty("position", gm ? "fixed" : "absolute", "important");
-          gc2.style.setProperty("z-index",  gm ? "1300" : "2",         "important");
-        });
+          gc2.style.setProperty("position",  gm ? "fixed"    : "absolute", "important");
+          gc2.style.setProperty("z-index",   gm ? "1300"     : "2",        "important");
+          // transform이 있으면 fixed가 뷰포트 기준으로 동작 안 함 → 게임모드에서 제거
+          gc2.style.setProperty("transform", gm ? "none"     : "",         "important");
+        }
+        var _gameModeObserver = new MutationObserver(_applyGameMode);
         _gameModeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+        // 현재 상태도 즉시 적용
+        _applyGameMode();
       })
       .catch(function (e) { console.error("[Live2D] 모델 로드 오류:", e); });
   }
