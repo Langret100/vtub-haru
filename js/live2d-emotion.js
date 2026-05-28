@@ -327,7 +327,7 @@
       gc.style.setProperty("bottom",   "0",          "important");
       gc.style.setProperty("overflow", "visible",    "important");
       gc.style.setProperty("position", isGameMode ? "fixed" : "absolute", "important");
-      gc.style.setProperty("z-index",  isGameMode ? "1300" : "2", "important");
+      gc.style.setProperty("z-index",  isGameMode ? "10000" : "2", "important");
     }
     if (g) {
       g.style.setProperty("width",    SZ_W + "px", "important");
@@ -411,16 +411,97 @@
         applyEmotion("기본대기");
         if (pending) { applyEmotion(pending); pending = null; }
 
-        // 게임 모드 전환 감지 → ghostContainer position/z-index 갱신
+        // 게임 모드 전환 감지 → ghostContainer position/z-index/크기 갱신
         function _applyGameMode() {
           var gc2 = document.getElementById("ghostContainer");
+          var g2  = document.getElementById("ghost");
+          var cv2 = document.getElementById("live2dCanvas");
           if (!gc2) return;
           var gm = document.body.classList.contains("is-game-mode");
-          gc2.style.setProperty("position",  gm ? "fixed"    : "absolute", "important");
-          gc2.style.setProperty("z-index",   gm ? "1300"     : "2",        "important");
-          // transform이 있으면 fixed가 뷰포트 기준으로 동작 안 함 → 게임모드에서 제거
-          gc2.style.setProperty("transform", gm ? "none"     : "",         "important");
+          var isMob2 = window.innerWidth <= 768;
+
+          // transform 항상 제거 (parallax 등 외부 CSS 영향 차단)
+          gc2.style.setProperty("transform", "none", "important");
+
+          if (gm) {
+            // 게임 모드: 우측 하단 작은 캐릭터 — PC/모바일 분기
+            var gmW, gmH;
+            if (isMob2) {
+              // 모바일: 화면 우측 하단 약 28% 높이
+              gmW = Math.round(window.innerWidth  * 0.28);
+              gmH = Math.round(window.innerHeight * 0.26);
+              gmW = Math.max(85,  Math.min(140, gmW));
+              gmH = Math.max(140, Math.min(220, gmH));
+            } else {
+              // PC: 화면 우측 하단 약 32% 높이
+              gmW = Math.round(window.innerWidth  * 0.14);
+              gmH = Math.round(window.innerHeight * 0.32);
+              gmW = Math.max(120, Math.min(200, gmW));
+              gmH = Math.max(200, Math.min(300, gmH));
+            }
+            // position/z-index/크기/위치 모두 !important로 덮어쓰기
+            gc2.style.setProperty("position", "fixed",         "important");
+            gc2.style.setProperty("z-index",  "10000",          "important");
+            gc2.style.setProperty("right",    "0",              "important");
+            gc2.style.setProperty("bottom",   "0",              "important");
+            gc2.style.setProperty("top",      "auto",           "important");
+            gc2.style.setProperty("left",     "auto",           "important");
+            gc2.style.setProperty("width",    gmW + "px",       "important");
+            gc2.style.setProperty("height",   gmH + "px",       "important");
+            gc2.style.setProperty("overflow", "visible",        "important");
+            if (g2) {
+              g2.style.setProperty("width",   gmW + "px",       "important");
+              g2.style.setProperty("height",  gmH + "px",       "important");
+            }
+            if (cv2) {
+              cv2.style.setProperty("width",  gmW + "px",       "important");
+              cv2.style.setProperty("height", gmH + "px",       "important");
+            }
+            try { app && app.renderer && app.renderer.resize(gmW, gmH); } catch(_) {}
+            if (model) {
+              var mW2 = model.internalModel.width  || 1024;
+              var mH2 = model.internalModel.height || 1024;
+              var sc2 = (gmH * 1.15) / mH2;
+              // 접수원 하루(greeter): 게임 모드에서 20% 크게 + 15px 아래
+              if (currentModelKey === "greeter") sc2 *= 1.20;
+              model.scale.set(sc2);
+              model.x = (gmW - mW2 * sc2) / 2;
+              model.y = gmH * 0.05 + (currentModelKey === "greeter" ? 15 : 0);
+            }
+          } else {
+            // 일반 모드: 원래 크기로 복귀
+            var sz2 = getContainerSize();
+            gc2.style.setProperty("position", isMob2 ? "absolute" : "absolute", "important");
+            gc2.style.setProperty("z-index",  "2",        "important");
+            gc2.style.removeProperty("top");
+            gc2.style.removeProperty("left");
+            gc2.style.setProperty("right",  "0",            "important");
+            gc2.style.setProperty("bottom", "0",            "important");
+            gc2.style.setProperty("width",  sz2.w + "px",   "important");
+            gc2.style.setProperty("height", sz2.h + "px",   "important");
+            // transform 복구 (parallax용 CSS 변수 방식)
+            gc2.style.setProperty("transform", "translate3d(var(--plx-x,0px),var(--plx-y,0px),0)", "important");
+            if (g2) {
+              g2.style.setProperty("width",  sz2.w + "px", "important");
+              g2.style.setProperty("height", sz2.h + "px", "important");
+            }
+            if (cv2) {
+              cv2.style.setProperty("width",  sz2.w + "px", "important");
+              cv2.style.setProperty("height", sz2.h + "px", "important");
+            }
+            try { app && app.renderer && app.renderer.resize(sz2.w, sz2.h); } catch(_) {}
+            if (model) {
+              var mW3 = model.internalModel.width  || 1024;
+              var mH3 = model.internalModel.height || 1024;
+              var t2  = calcTransform(mW3, mH3, sz2, currentModelKey);
+              model.scale.set(t2.sc);
+              model.x = t2.x;
+              model.y = t2.y;
+            }
+          }
         }
+        // 전역 노출: game-manager.js에서도 직접 호출 가능
+        window._applyLive2DGameMode = _applyGameMode;
         var _gameModeObserver = new MutationObserver(_applyGameMode);
         _gameModeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
         // 현재 상태도 즉시 적용

@@ -55,11 +55,10 @@
 /* 게임 모드일 때 고스트를 화면 하단 구석에 배치 */
 body.is-game-mode #ghostContainer {
   position: fixed;
-  right: 3vw;
+  right: 0;
   bottom: 0;
-  transform: scale(0.55);
-  transform-origin: bottom right;
-  z-index: 9999;
+  /* 크기/스케일은 live2d-emotion.js _applyGameMode()가 직접 제어 */
+  z-index: 10001;
 }
 body.is-game-mode #ghost {
   pointer-events: none;

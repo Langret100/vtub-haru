@@ -89,6 +89,10 @@
     } catch(e) {}
 if (chatPanel) chatPanel.classList.add("hidden");
     if (body) body.classList.add("is-game-mode");
+    // Live2D 게임모드 크기 즉시 적용 (MutationObserver 타이밍 보완)
+    setTimeout(function() {
+      try { if (typeof window._applyLive2DGameMode === "function") window._applyLive2DGameMode(); } catch(e) {}
+    }, 30);
 
     if (bgmKey) playGameBgm(bgmKey);
 

@@ -2,12 +2,6 @@
 (function () {
   if (window.gameGhostUI) return;
 
-  const EMOTION_POOL = {
-    start:    ["cheer","listen","greet"],
-    correct:  ["joy","fun","cheer","greet"],
-    gameover: ["fail","sad","shy"]
-  };
-
   const LINES = {
     start: [
       "좋아, 한 번 제대로 놀아보자!",
@@ -28,6 +22,12 @@
       "이렇게만 계속 가면 금방 마스터 하겠는걸?",
       "좋았어! 지금 리듬 그대로 이어가보자."
     ],
+    miss: [
+      "괜찮아, 한 번 더 해봐!",
+      "어디가 헷갈렸는지 같이 봐볼까?",
+      "실수도 연습의 일부야.",
+      "다음엔 꼭 맞출 수 있어!"
+    ],
     gameover: [
       "아쉽지만 다음에 더 잘할 수 있어.",
       "실패해도 괜찮아. 다시 하면 되지!",
@@ -37,11 +37,13 @@
     ]
   };
 
-  // 감정 키 → 부모 game-emotion.js REACTIONS 키 매핑
+  // 이벤트 타입 → game-emotion.js REACTIONS 키 직접 매핑
   const EMOTION_REMAP = {
-    cheer: "start", listen: "start", greet: "start",
-    joy: "good", fun: "good",
-    fail: "gameover", sad: "gameover", shy: "gameover"
+    start:    "start",
+    correct:  "good",
+    miss:     "miss",
+    gameover: "gameover",
+    exit:     "exit"
   };
 
   let bubbleEl = null;
@@ -59,24 +61,42 @@
       .game-ghost-bubble {
         position: fixed;
         right: 8px;
-        bottom: 16px;
-        max-width: min(220px, 55vw);
+        bottom: 0;
+        max-width: min(190px, 48vw);
         padding: 8px 12px;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.95);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-        font-size: 0.85rem;
-        line-height: 1.4;
-        text-align: center;
-        color: #333;
+        border-radius: 14px 14px 4px 14px;
+        background: rgba(255,255,255,0.97);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.22);
+        font-size: 0.80rem;
+        line-height: 1.45;
+        text-align: left;
+        color: #222;
         opacity: 0;
-        transform: translateY(6px);
-        transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+        transform: translateY(8px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
         pointer-events: none;
-        z-index: 9999;
+        z-index: 10002;
         box-sizing: border-box;
         word-break: keep-all;
         overflow-wrap: break-word;
+      }
+      @media (max-width: 768px) {
+        .game-ghost-bubble {
+          right: 4px;
+          max-width: min(150px, 40vw);
+          padding: 6px 9px;
+          font-size: 0.72rem;
+          line-height: 1.4;
+        }
+      }
+      .game-ghost-bubble::after {
+        content: '';
+        position: absolute;
+        right: 14px;
+        bottom: -8px;
+        border: 8px solid transparent;
+        border-top-color: rgba(255,255,255,0.97);
+        border-bottom: none;
       }
       .game-ghost-bubble.visible {
         opacity: 1;
@@ -89,10 +109,31 @@
     d.body.appendChild(bubbleEl);
   }
 
+  function calcBubblePos() {
+    var isMob = window.innerWidth <= 768;
+    var charW, charH, bubbleBottom, bubbleRight;
+    if (isMob) {
+      charW = Math.min(140, Math.max(85,  Math.round(window.innerWidth  * 0.28)));
+      charH = Math.min(220, Math.max(140, Math.round(window.innerHeight * 0.26)));
+      bubbleRight  = Math.round(charW * 0.05) + "px";  // 모바일: 캐릭터 안쪽
+      bubbleBottom = Math.round(charH * 0.95) + "px";
+    } else {
+      charW = Math.min(200, Math.max(120, Math.round(window.innerWidth  * 0.14)));
+      charH = Math.min(300, Math.max(200, Math.round(window.innerHeight * 0.32)));
+      // PC: 말풍선 우측 끝이 캐릭터 우측 끝과 맞도록
+      bubbleRight  = Math.round(charW * 0.04) + "px";
+      bubbleBottom = Math.round(charH * 0.95) + "px";
+    }
+    return { bottom: bubbleBottom, right: bubbleRight };
+  }
+
   function showBubble(text) {
     if (!bubbleEl) return;
     if (text) {
       bubbleEl.textContent = text;
+      var pos = calcBubblePos();
+      bubbleEl.style.bottom = pos.bottom;
+      bubbleEl.style.right  = pos.right;
       bubbleEl.classList.add("visible");
     } else {
       bubbleEl.textContent = "";
@@ -104,15 +145,12 @@
     ensureDom();
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
 
-    const pool = EMOTION_POOL[eventType] || ["idle"];
-    const emoKey = choice(pool);
     const line = choice(LINES[eventType] || [""]);
-
-    // 말풍선은 iframe 안에 표시
+    // 말풍선은 iframe 안에 표시 (캐릭터 바로 위)
     showBubble(line);
 
-    // 부모 창 Live2D로 감정 전달
-    var parentType = EMOTION_REMAP[emoKey] || eventType;
+    // 부모 창 Live2D로 감정 전달 (game-emotion.js REACTIONS 키로 직접 매핑)
+    var parentType = EMOTION_REMAP[eventType] || eventType;
     try {
       var target = (window.parent !== window) ? window.parent : (window.opener || null);
       if (target) target.postMessage({ type: "GAME_REACT", eventType: parentType }, "*");

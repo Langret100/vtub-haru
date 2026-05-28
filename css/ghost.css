@@ -107,7 +107,7 @@ body.is-game-mode #ghostContainer {
   right: 0;
   display: block;
   position: fixed;
-  z-index: 1300;
+  z-index: 10000;
   pointer-events: none;
 }
 
@@ -493,21 +493,29 @@ body.is-game-mode #ghostContainer {
     }
 /* 반응형 */
     @media (max-width: 768px) {
-      #ghostContainer {
+      /* 게임 모드가 아닐 때만 기본 크기 적용 */
+      body:not(.is-game-mode) #ghostContainer {
         right: 0;
         bottom: 0;
         width: 75vw;
         height: 100%;
         overflow: visible;
       }
-      #ghost {
+      body:not(.is-game-mode) #ghost {
         width: 75vw;
         height: 100%;
         overflow: visible;
       }
-      #live2dCanvas {
+      body:not(.is-game-mode) #live2dCanvas {
         width: 75vw !important;
         height: 100% !important;
+      }
+      /* 기존 셀렉터도 유지 (하위호환) */
+      #ghostContainer {
+        overflow: visible;
+      }
+      #ghost {
+        overflow: visible;
       }
       #bubbleWrapper {
         right: 69vw;
@@ -2522,12 +2530,10 @@ body {
   /* 기본 화면(게임 모드 아님) 고스트 위치/크기 */
   
 
-  /* 게임 모드에서는 화면 하단 구석에 조금 크게 */
+  /* 게임 모드: 크기/위치는 live2d-emotion.js _applyGameMode()가 직접 제어 */
   body.is-game-mode #ghostContainer {
     right: 0;
-    bottom: 4px;
-    transform: scale(1.25);
-    transform-origin: bottom right;
+    bottom: 0;
   }
 
   /* 말풍선 루트를 고스트 기준으로 더 위/오른쪽으로 이동 */
