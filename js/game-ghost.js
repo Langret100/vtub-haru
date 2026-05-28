@@ -117,19 +117,20 @@
     style.textContent = `
       .game-ghost-widget {
         position: fixed;
-        right: ${isDreamShapeGame ? 0 : 4}px;
+        right: 0;
         bottom: 0;
-        width: 144px;
-        height: 192px;
+        width: min(144px, 30vw);
+        height: min(192px, 40vw);
         z-index: 9999;
         pointer-events: none;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-end;
         justify-content: flex-end;
+        overflow: visible;
       }
       .game-ghost-bubble {
-        max-width: 240px;
+        max-width: min(240px, 60vw);
         margin-bottom: 4px;
         padding: 6px 10px;
         border-radius: 16px;
@@ -142,26 +143,17 @@
         opacity: 0;
         transform: translateY(6px);
         transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+        word-break: keep-all;
+        overflow-wrap: break-word;
       }
       .game-ghost-bubble.visible {
         opacity: 1;
         transform: translateY(0);
       }
-      .game-ghost-widget img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
-      }
+
       @media (max-width: 480px) {
-        .game-ghost-widget {
-          right: ${isDreamShapeGame ? 0 : 2}px;
-          bottom: 0;
-          width: 112px;
-          height: 160px;
-        }
         .game-ghost-bubble {
-          max-width: 200px;
+          max-width: min(200px, 55vw);
           font-size: 0.8rem;
         }
       }
@@ -176,9 +168,7 @@
     bubbleEl.className = "game-ghost-bubble";
     container.appendChild(bubbleEl);
 
-    imgEl = d.createElement("img");
-    imgEl.alt = "게임 고스트";
-    container.appendChild(imgEl);
+    // imgEl 제거: 부모 창 Live2D가 감정 표현 담당
 
     d.body.appendChild(container);
 
@@ -186,28 +176,7 @@
   }
 
   // 지정된 감정 키의 프레임을 3초 간격으로 깜빡이게 설정
-  function setEmotionFrames(key) {
-    if (!imgEl) return;
-    if (frameTimer) {
-      clearInterval(frameTimer);
-      frameTimer = null;
-    }
-
-    const frames = EMOTIONS[key] || EMOTIONS.idle;
-    if (!frames || frames.length === 0) return;
-
-    let idx = 0;
-    imgEl.style.transform = ""; // 크기 조절 없음
-    imgEl.src = resolveImagePath(frames[0]); // 항상 1번 프레임(눈 뜬 상태)부터 시작
-
-    if (frames.length > 1) {
-      frameTimer = setInterval(function () {
-        idx = (idx + 1) % frames.length;
-        imgEl.src = resolveImagePath(frames[idx]);
-      }, 3000); // 3초에 한 번 깜빡임
-    }
-  }
-
+  function setEmotionFrames(key) { /* 부모 Live2D가 담당 - 미사용 */ }
   function showBubble(text) {
     if (!bubbleEl) return;
     if (text) {
