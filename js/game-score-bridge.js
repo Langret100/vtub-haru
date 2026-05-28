@@ -9,6 +9,14 @@
   global.addEventListener("message", function(ev){
     try {
       var data = ev && ev.data;
+      // 게임 감정 이벤트 → 부모 Live2D로 전달
+      if (data && data.type === "GAME_REACT") {
+        if (typeof global.gameReact === "function") {
+          try { global.gameReact(data.eventType); } catch(e) {}
+        }
+        return;
+      }
+
       if (!data || data.type !== "GAME_SCORE") return;
 
       if (!global.gameRankingReport || typeof global.gameRankingReport.send !== "function") {

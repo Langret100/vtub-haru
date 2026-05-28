@@ -60,17 +60,6 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // Live2D 활성화 여부 확인 (부모/오프너 창 기준)
-  function isLive2DActive() {
-    try {
-      if (window.parent && window.parent !== window && window.parent._live2dActive) return true;
-    } catch (e) {}
-    try {
-      if (window.opener && !window.opener.closed && window.opener._live2dActive) return true;
-    } catch (e) {}
-    return false;
-  }
-
   // 부모/오프너/로컬스토리지의 캐릭터 설정을 이용해서 현재 캐릭터 이미지 경로로 변환
   function resolveImagePath(fileName) {
     const baseSrc = "images/emotions/" + fileName;
@@ -204,14 +193,6 @@
       frameTimer = null;
     }
 
-    // Live2D 활성화 중에는 정적 이미지 불필요 → 404 요청 차단
-    if (isLive2DActive()) {
-      imgEl.src = "";
-      imgEl.style.display = "none";
-      return;
-    }
-    imgEl.style.display = "";
-
     const frames = EMOTIONS[key] || EMOTIONS.idle;
     if (!frames || frames.length === 0) return;
 
@@ -245,17 +226,22 @@
       hideTimer = null;
     }
 
-    const pool = EMOTION_POOL[eventType] || ["idle"];
-    const emoKey = choice(pool);
     const linePool = LINES[eventType] || [""];
     const line = choice(linePool);
 
-    setEmotionFrames(emoKey);
+    // 말풍선은 게임 내에 표시
     showBubble(line);
 
-    // 감정 + 말풍선은 최대 5초 동안 유지, 그 후 기본으로 복귀
+    // 감정은 부모 창 Live2D로 전달 (postMessage)
+    try {
+      var target = window.parent !== window ? window.parent : (window.opener || null);
+      if (target) {
+        target.postMessage({ type: "GAME_REACT", eventType: eventType }, "*");
+      }
+    } catch(e) {}
+
+    // 말풍선은 5초 후 숨김
     hideTimer = setTimeout(function () {
-      setEmotionFrames("idle");
       showBubble("");
     }, 5000);
   }

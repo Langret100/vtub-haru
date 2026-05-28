@@ -61,20 +61,13 @@
     if (!overlay || !frame) return;
     const isMessenger = (bgmKey === "messenger");
     // 프리로드로 이미 같은 src가 세팅돼 있으면 재로드 생략 (SignalBus 구독 유지)
-    const targetHref = new URL(url, location.href).href;
-    const isSameSrc = frame.src && frame.src === targetHref;
-    if (!isSameSrc) {
-      // src를 바꾸기 전에 iframe을 투명하게 숨겨서
-      // 이전 페이지(메신저 프리로드 등)가 잠깐 보이는 현상을 방지
-      frame.style.opacity = "0";
-      frame.style.pointerEvents = "none";
-      var _onLoad = function() {
-        frame.removeEventListener("load", _onLoad);
-        frame.style.opacity = "";
-        frame.style.pointerEvents = "";
-      };
-      frame.addEventListener("load", _onLoad);
-      frame.src = url;
+    // 메신저가 프리로드돼 있고 다른 게임을 열 때는 src를 교체
+    var targetUrl = new URL(url, location.href).href;
+    var needsLoad = (frame.src !== targetUrl);
+    if (needsLoad) {
+      frame.src = "";
+      // 잠깐 비워서 이전 화면(메신저) 안 보이게 한 뒤 새 게임 로드
+      setTimeout(function() { frame.src = url; }, 30);
     }
     overlay.classList.remove("hidden");
     try { overlay.dataset.mode = bgmKey || ""; } catch(e) {}
