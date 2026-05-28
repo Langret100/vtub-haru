@@ -48,10 +48,14 @@
 
   /* ── 요소별 CSS 변수 적용 ── */
   function applyLayers(nx, ny) {
+    var gameMode = document.body.classList.contains('is-game-mode');
     LAYERS.forEach(function (layer) {
       var dx = (nx * layer.tx).toFixed(2);
       var dy = (ny * layer.ty).toFixed(2);
       layer.ids.forEach(function (id) {
+        // 게임모드에서 ghostContainer/bubbleWrapper는 건드리지 않음
+        // (position:fixed + transform 조합 방지)
+        if (gameMode && (id === 'ghostContainer' || id === 'bubbleWrapper')) return;
         var el = document.getElementById(id);
         if (!el) return;
         el.style.setProperty('--plx-x', dx + 'px');

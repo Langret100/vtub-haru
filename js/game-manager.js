@@ -61,13 +61,8 @@
     if (!overlay || !frame) return;
     const isMessenger = (bgmKey === "messenger");
     // 프리로드로 이미 같은 src가 세팅돼 있으면 재로드 생략 (SignalBus 구독 유지)
-    // 메신저가 프리로드돼 있고 다른 게임을 열 때는 src를 교체
-    var targetUrl = new URL(url, location.href).href;
-    var needsLoad = (frame.src !== targetUrl);
-    if (needsLoad) {
-      frame.src = "";
-      // 잠깐 비워서 이전 화면(메신저) 안 보이게 한 뒤 새 게임 로드
-      setTimeout(function() { frame.src = url; }, 30);
+    if (!frame.src || frame.src !== (new URL(url, location.href).href)) {
+      frame.src = url;
     }
     overlay.classList.remove("hidden");
     try { overlay.dataset.mode = bgmKey || ""; } catch(e) {}
