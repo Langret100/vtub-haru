@@ -159,66 +159,78 @@
     return chosen || null;
   }
 
-  function speak(text){
+  // TTS: 무음 워밍업 utterance로 AudioContext를 미리 선점한 뒤 실제 발화
+  // Chrome은 첫 번째 speak() 시 AudioContext를 초기화하느라 앞부분을 자름.
+  // volume:0 + rate:10 의 워밍업을 먼저 큐잉 → onend에서 실제 텍스트를 이어서 발화.
+  // 이 방식은 cancel() + setTimeout 딜레이가 전혀 없으므로 앞부분 잘림이 발생하지 않음.
+  var _ttsCurrentUtter = null;
+  var _ttsWarmUtter    = null;
+
+  function speak(text) {
     if (!hasSpeech || !enabled) return;
     if (!text || typeof text !== "string") return;
 
     var synth = window.speechSynthesis;
 
-    function _doSpeak() {
+    // 기존 콜백 끊기 (이전 사이클 onend가 새 발화를 덮어쓰지 않도록)
+    if (_ttsWarmUtter)    { _ttsWarmUtter.onend = null;    _ttsWarmUtter.onerror = null;    _ttsWarmUtter = null; }
+    if (_ttsCurrentUtter) { _ttsCurrentUtter.onend = null; _ttsCurrentUtter.onerror = null; _ttsCurrentUtter = null; }
+
+    try { synth.cancel(); } catch(e) {}
+    try { synth.resume(); } catch(e) {}
+
+    var voice = pickVoiceForUtterance();
+    var lang  = (voice && voice.lang) || "ko-KR";
+    var pitch = mapToneToPitch(toneValue);
+    var rate  = clampRange(mapRateToUtteranceRate(rateValue) * mapToneRateFactor(toneValue), SOUND_MIN, SOUND_MAX, 1.0);
+
+    // ① 무음 워밍업: AudioContext 선점용 (들리지 않음)
+    var warm = new window.SpeechSynthesisUtterance(" ");
+    if (voice) warm.voice = voice;
+    warm.lang   = lang;
+    warm.volume = 0;      // 무음
+    warm.rate   = 10;     // 최대 속도 — 즉시 끝남
+    warm.pitch  = 1;
+    _ttsWarmUtter = warm;
+
+    // ② 워밍업 끝나면 실제 발화
+    warm.onend = function() {
+      _ttsWarmUtter = null;
+      if (!enabled) return;
       try {
-        // utterance를 speak 직전에 생성 (cancel 이후 voice 바인딩 유지)
         var utter = new window.SpeechSynthesisUtterance(text);
-        var voice = pickVoiceForUtterance();
         if (voice) utter.voice = voice;
-        utter.lang  = (voice && voice.lang) || "ko-KR";
-        utter.pitch = mapToneToPitch(toneValue);
-        utter.rate  = clampRange(mapRateToUtteranceRate(rateValue) * mapToneRateFactor(toneValue), SOUND_MIN, SOUND_MAX, 1.0);
-        // paused 상태 해제 (Chrome 버그 방지)
+        utter.lang  = lang;
+        utter.pitch = pitch;
+        utter.rate  = rate;
+        utter.volume = 1;
+        utter.onend   = function() { _ttsCurrentUtter = null; };
+        utter.onerror = function() { _ttsCurrentUtter = null; };
+        _ttsCurrentUtter = utter;
         try { synth.resume(); } catch(e) {}
-        // Live2D 립싱크 — onstart/onboundary/onend 완전 연동
-        utter.onstart = function() {
-          if (typeof window.onLive2DStartSpeaking === "function") {
-            try { window.onLive2DStartSpeaking(); } catch(_) {}
-          }
-        };
-        // onboundary: 단어/음절 경계마다 입 강도 변화
-        utter.onboundary = function(ev) {
-          if (typeof window.onLive2DBoundary === "function") {
-            try { window.onLive2DBoundary(ev); } catch(_) {}
-          }
-        };
-        utter.onend = function() {
-          if (typeof window.onLive2DStopSpeaking === "function") {
-            try { window.onLive2DStopSpeaking(); } catch(_) {}
-          }
-        };
-        utter.onerror = function() {
-          if (typeof window.onLive2DStopSpeaking === "function") {
-            try { window.onLive2DStopSpeaking(); } catch(_) {}
-          }
-        };
         synth.speak(utter);
       } catch(e) {}
-    }
-
-    try {
-      // 항상 cancel 후 즉시 빈 워밍업 utterance → 연속 큐잉으로 앞부분 끊김 방지
-      try { synth.cancel(); } catch(e) {}
-      // 워밍업: 무음 짧은 utterance로 AudioContext 선점
+    };
+    warm.onerror = function() {
+      // 워밍업 실패해도 그냥 직접 발화 시도
+      _ttsWarmUtter = null;
+      if (!enabled) return;
       try {
-        var warmup = new window.SpeechSynthesisUtterance("\u200b"); // zero-width space
-        warmup.volume = 0;
-        warmup.rate   = 10;
-        warmup.onend  = _doSpeak;
-        synth.speak(warmup);
-      } catch(e) {
-        // 워밍업 실패 시 직접 speak
-        setTimeout(_doSpeak, 80);
-      }
-    } catch(e) {
-      try { _doSpeak(); } catch(e2) {}
-    }
+        var utter2 = new window.SpeechSynthesisUtterance(text);
+        if (voice) utter2.voice = voice;
+        utter2.lang  = lang;
+        utter2.pitch = pitch;
+        utter2.rate  = rate;
+        utter2.volume = 1;
+        utter2.onend   = function() { _ttsCurrentUtter = null; };
+        utter2.onerror = function() { _ttsCurrentUtter = null; };
+        _ttsCurrentUtter = utter2;
+        try { synth.resume(); } catch(e) {}
+        synth.speak(utter2);
+      } catch(e) {}
+    };
+
+    synth.speak(warm);
   }
 
   function refreshLabel(){
@@ -238,7 +250,11 @@
     enabled = !!on && hasSpeech;
     saveState();
     refreshLabel();
-    // 설정 패널 내 체크박스 상태도 동기화
+    if (!enabled) {
+      if (_ttsWarmUtter)    { _ttsWarmUtter.onend = null;    _ttsWarmUtter.onerror = null;    _ttsWarmUtter = null; }
+      if (_ttsCurrentUtter) { _ttsCurrentUtter.onend = null; _ttsCurrentUtter.onerror = null; _ttsCurrentUtter = null; }
+      try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
     if (settingsPanel) {
       const chk = settingsPanel.querySelector('input[name="ttsEnabled"]');
       if (chk) chk.checked = enabled;
@@ -587,8 +603,7 @@
   // 전역 공개 API
   window.ttsVoice = {
     isAvailable: hasSpeech,
-    isEnabled: function(){ return enabled && hasSpeech; },
-    getRate: function(){ return rateValue; },
+    isEnabled: function(){ return enabled; },
     speak: speak,
     setEnabled: setEnabled,
     toggle: toggle,
