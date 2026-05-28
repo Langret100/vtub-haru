@@ -320,13 +320,14 @@
     var g  = document.getElementById("ghost");
 
     if (gc) {
+      var isGameMode = document.body.classList.contains("is-game-mode");
       gc.style.setProperty("width",    SZ_W + "px", "important");
       gc.style.setProperty("height",   SZ_H + "px", "important");
       gc.style.setProperty("right",    "0",          "important");
       gc.style.setProperty("bottom",   "0",          "important");
       gc.style.setProperty("overflow", "visible",    "important");
-      gc.style.setProperty("position", "absolute",   "important");
-      gc.style.setProperty("z-index",  "2",          "important");
+      gc.style.setProperty("position", isGameMode ? "fixed" : "absolute", "important");
+      gc.style.setProperty("z-index",  isGameMode ? "1300" : "2", "important");
     }
     if (g) {
       g.style.setProperty("width",    SZ_W + "px", "important");
@@ -409,6 +410,16 @@
         window._live2dActive = true;
         applyEmotion("기본대기");
         if (pending) { applyEmotion(pending); pending = null; }
+
+        // 게임 모드 전환 감지 → ghostContainer position/z-index 갱신
+        var _gameModeObserver = new MutationObserver(function() {
+          var gc2 = document.getElementById("ghostContainer");
+          if (!gc2) return;
+          var gm = document.body.classList.contains("is-game-mode");
+          gc2.style.setProperty("position", gm ? "fixed" : "absolute", "important");
+          gc2.style.setProperty("z-index",  gm ? "1300" : "2",         "important");
+        });
+        _gameModeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
       })
       .catch(function (e) { console.error("[Live2D] 모델 로드 오류:", e); });
   }

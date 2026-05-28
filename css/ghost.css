@@ -106,6 +106,7 @@ input, textarea, [contenteditable="true"] {
 body.is-game-mode #ghostContainer {
   right: 0;
   display: block;
+  position: fixed;
   z-index: 1300;
   pointer-events: none;
 }
