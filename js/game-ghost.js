@@ -34,16 +34,48 @@
       "이번 판은 여기까지! 한 번 더 도전해 볼까?",
       "에이, 이 정도면 워밍업이지 뭐.",
       "괜찮아. 나도 옆에서 다시 도와줄게."
+    ],
+    boss: [
+      "보스 등장! 긴장 늦추지 마!",
+      "오, 강적이 왔어! 잘 피하면서 싸워!",
+      "보스야! 패턴 잘 보고 공격해!",
+      "이런, 보스 등장! 집중해!",
+      "보스가 나타났어. 침착하게 대응해!"
+    ],
+    levelup: [
+      "레벨업! 점점 강해지고 있어! 😊",
+      "레벨 올랐다! 스킬 잘 골라봐!",
+      "성장했네! 어떤 능력을 키울 거야?",
+      "와, 레벨업! 계속 이렇게 해줘!",
+      "레벨업 축하해! 더 강해질 수 있어!"
+    ],
+    bossClear: [
+      "보스 처치! 대단한데?!",
+      "와, 해냈어! 보스를 무찔렀어!",
+      "보스 격파! 역시 믿었다고!",
+      "보스 처치! 정말 잘했어!",
+      "완벽해! 다음 보스도 이길 수 있어!"
+    ],
+    reward: [
+      "보상을 골라봐! 신중하게!",
+      "어떤 걸 선택할 거야? 기대되는데!",
+      "보상 시간! 뭐가 제일 좋을까~?",
+      "이것도 좋고 저것도 좋은데… 잘 골라봐!",
+      "보상 선택! 전략적으로 생각해봐!"
     ]
   };
 
   // 이벤트 타입 → game-emotion.js REACTIONS 키 직접 매핑
   const EMOTION_REMAP = {
-    start:    "start",
-    correct:  "good",
-    miss:     "miss",
-    gameover: "gameover",
-    exit:     "exit"
+    start:     "start",
+    correct:   "good",
+    miss:      "miss",
+    gameover:  "gameover",
+    exit:      "exit",
+    boss:      "start",
+    levelup:   "good",
+    bossClear: "good",
+    reward:    "good"
   };
 
   let bubbleEl = null;
@@ -60,15 +92,15 @@
     style.textContent = `
       .game-ghost-bubble {
         position: fixed;
-        right: 8px;
+        right: auto;
+        left: auto;
         bottom: 0;
-        max-width: min(190px, 48vw);
-        padding: 8px 12px;
+        padding: 7px 11px;
         border-radius: 14px 14px 4px 14px;
         background: rgba(255,255,255,0.97);
         box-shadow: 0 3px 12px rgba(0,0,0,0.22);
-        font-size: 0.80rem;
-        line-height: 1.45;
+        font-size: 0.78rem;
+        line-height: 1.42;
         text-align: left;
         color: #222;
         opacity: 0;
@@ -79,15 +111,6 @@
         box-sizing: border-box;
         word-break: keep-all;
         overflow-wrap: break-word;
-      }
-      @media (max-width: 768px) {
-        .game-ghost-bubble {
-          right: 4px;
-          max-width: min(150px, 40vw);
-          padding: 6px 9px;
-          font-size: 0.72rem;
-          line-height: 1.4;
-        }
       }
       .game-ghost-bubble::after {
         content: '';
@@ -111,20 +134,25 @@
 
   function calcBubblePos() {
     var isMob = window.innerWidth <= 768;
-    var charW, charH, bubbleBottom, bubbleRight;
+    var charW, charH, bubW, bubLeft, bubbleBottom;
     if (isMob) {
       charW = Math.min(140, Math.max(85,  Math.round(window.innerWidth  * 0.28)));
       charH = Math.min(220, Math.max(140, Math.round(window.innerHeight * 0.26)));
-      bubbleRight  = Math.round(charW * 0.05) + "px";  // 모바일: 캐릭터 안쪽
-      bubbleBottom = Math.round(charH * 0.95) + "px";
     } else {
       charW = Math.min(200, Math.max(120, Math.round(window.innerWidth  * 0.14)));
       charH = Math.min(300, Math.max(200, Math.round(window.innerHeight * 0.32)));
-      // PC: 말풍선 우측 끝이 캐릭터 우측 끝과 맞도록
-      bubbleRight  = Math.round(charW * 0.04) + "px";
-      bubbleBottom = Math.round(charH * 0.95) + "px";
     }
-    return { bottom: bubbleBottom, right: bubbleRight };
+    // max-width = 캐릭터 너비의 170% (내용에 맞게 줄어들고, 넘으면 이 값에서 제한)
+    bubW = Math.round(charW * 1.7);
+    // 오른쪽 기준: 화면 우측에서 약간 안쪽 (캐릭터 컨테이너 안에 들어오도록)
+    bubbleBottom = Math.round(charH * 0.95) + "px";
+    return {
+      bottom:    bubbleBottom,
+      right:     (isMob ? 6 : 10) + "px",
+      left:      "auto",
+      maxWidth:  bubW + "px",
+      width:     "auto"
+    };
   }
 
   function showBubble(text) {
@@ -132,8 +160,11 @@
     if (text) {
       bubbleEl.textContent = text;
       var pos = calcBubblePos();
-      bubbleEl.style.bottom = pos.bottom;
-      bubbleEl.style.right  = pos.right;
+      bubbleEl.style.bottom    = pos.bottom;
+      bubbleEl.style.right      = pos.right;
+      bubbleEl.style.left       = pos.left;
+      bubbleEl.style.width      = pos.width;
+      bubbleEl.style.maxWidth   = pos.maxWidth;
       bubbleEl.classList.add("visible");
     } else {
       bubbleEl.textContent = "";
@@ -160,6 +191,7 @@
   }
 
   window.gameGhostUI = { react: react };
+  window.gameGhostReact = react;  // 편의 별칭
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", ensureDom);

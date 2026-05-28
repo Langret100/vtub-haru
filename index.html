@@ -60,6 +60,11 @@ body.is-game-mode #ghostContainer {
   /* 크기/스케일은 live2d-emotion.js _applyGameMode()가 직접 제어 */
   z-index: 10001;
 }
+/* 실시간-챗(messenger) 모드에서는 캐릭터 숨김 */
+body.is-game-mode .game-overlay.mode-messenger ~ * #ghostContainer,
+.game-overlay.mode-messenger.game-overlay:not(.hidden) ~ #ghostContainer {
+  display: none !important;
+}
 body.is-game-mode #ghost {
   pointer-events: none;
 }

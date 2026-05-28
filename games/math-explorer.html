@@ -1656,6 +1656,7 @@ const G = {
         
         this.textParticle(x, y - 150, '⚠️ 보스 등장! ⚠️', '#ff0', 3);
         SoundManager.bossAppear();
+        try { if (typeof window._mathSay === "function") window._mathSay("boss"); } catch(_) {}
         
         // 보스 전투 음악 시작
         setTimeout(() => {
@@ -1707,6 +1708,7 @@ const G = {
         this.paused = true;
         SoundManager.levelUp();
         document.getElementById('levelUpScreen').classList.remove('hidden');
+        try { if (typeof window._mathSay === "function") window._mathSay("levelup"); } catch(_) {}
         
         const container = document.getElementById('upgrades');
         container.innerHTML = '';
@@ -1733,6 +1735,7 @@ const G = {
                 up.apply(this.player);
                 document.getElementById('levelUpScreen').classList.add('hidden');
                 this.paused = false;
+                try { if (typeof window._mathSay === "function") setTimeout(function(){ window._mathSay("reward"); }, 100); } catch(_) {}
             };
             container.appendChild(card);
         });
@@ -2151,6 +2154,7 @@ const G = {
     gameOver() {
         this.running = false;
         document.getElementById('gameOverScreen').classList.remove('hidden');
+        try { if (typeof window._mathSay === "function") window._mathSay("gameover"); } catch(_) {}
         document.getElementById('finalStats').innerHTML = `
             <div>최종 점수: ${Math.floor(this.score)}</div>
             <div>레벨: ${this.player.level}</div>
@@ -3824,6 +3828,7 @@ class Player {
             // 처치 사운드 (보스는 특별 사운드)
             if (enemy.isBoss) {
                 SoundManager.bossKill();
+                try { if (typeof window._mathSay === "function") window._mathSay("bossClear"); } catch(_) {}
             } else {
                 SoundManager.kill();
             }
@@ -5319,5 +5324,18 @@ class Projectile {
 G.init();
 </script>
   <script src="../js/math-explorer-bridge.js"></script>
+  <script src="../js/game-ghost.js"></script>
+  <script>
+  // 수학탐험가: gameGhostReact 래퍼 (game-ghost.js의 이벤트 타입 직접 사용)
+  window._mathSay = function(type) {
+    if (typeof window.gameGhostReact === "function") {
+      window.gameGhostReact(type);
+    }
+  };
+  // 게임 시작 대사
+  window.addEventListener("load", function() {
+    setTimeout(function() { window._mathSay("start"); }, 800);
+  });
+  </script>
 </body>
 </html>

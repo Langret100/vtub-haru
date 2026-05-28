@@ -205,16 +205,15 @@
                 (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
 
     if (!isMob) {
-      /* PC: mousemove → focus */
+      /* PC: mousemove → 접수원 하루(greeter) 시선 추적만 */
       document.addEventListener("mousemove", function (e) {
-        if (!model) return;
-        // -1 ~ +1 정규화
+        if (!model || currentModelKey !== "greeter") return;
         var nx = (e.clientX / window.innerWidth)  * 2 - 1;
         var ny = (e.clientY / window.innerHeight) * 2 - 1;
-        model.focus(e.clientX, e.clientY);
-        // internalModel.focusController 직접 접근 (더 부드러운 반응)
+        try { model.focus(e.clientX, e.clientY); } catch(_) {}
         try {
-          model.internalModel.focusController.focus(nx, ny);
+          var fc = model.internalModel.focusController;
+          if (fc && typeof fc.focus === "function") fc.focus(nx, -ny);
         } catch (_) {}
       }, { passive: true });
     } else {
@@ -224,7 +223,7 @@
         var nx = Math.max(-1, Math.min(1, (e.gamma || 0) / 30));
         var ny = Math.max(-1, Math.min(1, ((e.beta  || 0) - 15) / 20));
         try {
-          model.internalModel.focusController.focus(nx, ny);
+          model.internalModel.focusController.focus(nx, -ny);
         } catch (_) {}
       }
 

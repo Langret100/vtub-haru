@@ -83,6 +83,9 @@
     try {
       if (bgmKey === "messenger") {
         overlay.classList.add("mode-messenger");
+        // 실시간-챗에서 캐릭터 숨김
+        var _gc = document.getElementById("ghostContainer");
+        if (_gc) _gc.style.setProperty("display", "none", "important");
       } else {
         overlay.classList.remove("mode-messenger");
       }
@@ -175,6 +178,9 @@ overlay.classList.add("hidden");
 
     if (chatPanel) chatPanel.classList.remove("hidden");
     if (body) body.classList.remove("is-game-mode");
+    // 캐릭터 복원 (messenger 모드에서 숨겼을 수 있음)
+    var _gcExit = document.getElementById("ghostContainer");
+    if (_gcExit) _gcExit.style.removeProperty("display");
 
     // [마이파 톡 예외] 닫을 때는 다른 게임들과 달리 "닫힘 대사"를 치지 않기
     // - 즉시 조용히 기본대기 표정으로 복귀 (말풍선 없이)

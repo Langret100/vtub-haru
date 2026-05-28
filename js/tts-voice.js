@@ -203,13 +203,18 @@
     }
 
     try {
-      if (synth.speaking || synth.pending) {
-        // 재생 중일 때만 cancel → 50ms 대기 → 새 utterance로 speak
-        try { synth.cancel(); } catch(e) {}
-        setTimeout(_doSpeak, 50);
-      } else {
-        // 재생 중 아닐 때는 딜레이 없이 바로 speak
-        _doSpeak();
+      // 항상 cancel 후 즉시 빈 워밍업 utterance → 연속 큐잉으로 앞부분 끊김 방지
+      try { synth.cancel(); } catch(e) {}
+      // 워밍업: 무음 짧은 utterance로 AudioContext 선점
+      try {
+        var warmup = new window.SpeechSynthesisUtterance("\u200b"); // zero-width space
+        warmup.volume = 0;
+        warmup.rate   = 10;
+        warmup.onend  = _doSpeak;
+        synth.speak(warmup);
+      } catch(e) {
+        // 워밍업 실패 시 직접 speak
+        setTimeout(_doSpeak, 80);
       }
     } catch(e) {
       try { _doSpeak(); } catch(e2) {}

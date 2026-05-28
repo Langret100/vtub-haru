@@ -591,6 +591,12 @@ function getCharImagePath(src) {
       const opts = options && typeof options === "object" ? options : {};
       const rawText = String(text || "");
       const bubbleLine = formatBubbleLine(rawText);
+      // 소셜챗 모드에서 캐릭터 응답을 Firebase로 전송하는 훅
+      try {
+        if (typeof window._socialChatBubbleHook === "function") {
+          window._socialChatBubbleHook(bubbleLine);
+        }
+      } catch(_) {}
 
       // [옵션 기능] 말풍선 TTS 읽어주기 훅
       if (window.ttsVoice && typeof window.ttsVoice.speak === "function") {
