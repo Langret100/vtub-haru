@@ -223,7 +223,7 @@
         var nx = Math.max(-1, Math.min(1, (e.gamma || 0) / 30));
         var ny = Math.max(-1, Math.min(1, ((e.beta  || 0) - 15) / 20));
         try {
-          model.internalModel.focusController.focus(nx, -ny);
+          model.internalModel.focusController.focus(nx, ny);  // 모바일: Y 반전 없음
         } catch (_) {}
       }
 
@@ -336,13 +336,14 @@
     }
 
     // PIXI: 캔버스 크기 = 컨테이너와 동일, resolution=1 고정 (autoDensity로 DPR 대응)
+    var _dpr = Math.min(window.devicePixelRatio || 1, 2); // 최대 2x (성능 제한)
     app = new PIXI.Application({
       width:           SZ_W,
       height:          SZ_H,
       backgroundAlpha: 0,
       antialias:       true,
       autoDensity:     true,
-      resolution:      1,  // 1 고정: autoDensity+dpr 조합 시 찌그러짐 방지
+      resolution:      _dpr,  // 실제 DPR 적용 → 모바일 선명도 향상
     });
 
     var cv = app.view;

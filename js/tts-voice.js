@@ -204,11 +204,22 @@
         utter.pitch = pitch;
         utter.rate  = rate;
         utter.volume = 1;
-        utter.onend   = function() { _ttsCurrentUtter = null; };
-        utter.onerror = function() { _ttsCurrentUtter = null; };
+        utter.onboundary = function(ev) {
+          try { if (typeof window.onLive2DBoundary === "function") window.onLive2DBoundary(ev); } catch(_) {}
+        };
+        utter.onend = function() {
+          _ttsCurrentUtter = null;
+          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
+        };
+        utter.onerror = function() {
+          _ttsCurrentUtter = null;
+          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
+        };
         _ttsCurrentUtter = utter;
         try { synth.resume(); } catch(e) {}
         synth.speak(utter);
+        // onstart 대신 speak() 직후 즉시 립싱크 시작 (Chrome에서 onstart 누락 방지)
+        try { if (typeof window.onLive2DStartSpeaking === "function") window.onLive2DStartSpeaking(text); } catch(_) {}
       } catch(e) {}
     };
     warm.onerror = function() {
@@ -222,11 +233,21 @@
         utter2.pitch = pitch;
         utter2.rate  = rate;
         utter2.volume = 1;
-        utter2.onend   = function() { _ttsCurrentUtter = null; };
-        utter2.onerror = function() { _ttsCurrentUtter = null; };
+        utter2.onboundary = function(ev) {
+          try { if (typeof window.onLive2DBoundary === "function") window.onLive2DBoundary(ev); } catch(_) {}
+        };
+        utter2.onend   = function() {
+          _ttsCurrentUtter = null;
+          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
+        };
+        utter2.onerror = function() {
+          _ttsCurrentUtter = null;
+          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
+        };
         _ttsCurrentUtter = utter2;
         try { synth.resume(); } catch(e) {}
         synth.speak(utter2);
+        try { if (typeof window.onLive2DStartSpeaking === "function") window.onLive2DStartSpeaking(text); } catch(_) {}
       } catch(e) {}
     };
 

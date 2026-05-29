@@ -612,11 +612,9 @@ function getCharImagePath(src) {
       bubbleWrapper.classList.remove("hidden");
       bubbleWrapper.classList.add("visible");
 
-      // Live2D 립싱크 — TTS 없을 때만 직접 제어 (TTS 있으면 onstart/onend에서 처리)
-      if (!window.ttsVoice || !window.ttsVoice.isEnabled || !window.ttsVoice.isEnabled()) {
-        if (typeof window.onLive2DStartSpeaking === "function") {
-          try { window.onLive2DStartSpeaking(bubbleLine); } catch(_) {}
-        }
+      // Live2D 립싱크 — 항상 시작 (TTS가 켜진 경우 tts-voice.js가 덮어쓰므로 중복 무해)
+      if (typeof window.onLive2DStartSpeaking === "function") {
+        try { window.onLive2DStartSpeaking(bubbleLine); } catch(_) {}
       }
 
       // 말풍선이 켜질 때의 감정 상태를 기록

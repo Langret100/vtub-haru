@@ -439,8 +439,43 @@ function setModeSocial(enabled) {
       var inputEl = userInput || document.getElementById("userInput");
       var text = "";
       if (inputEl && typeof inputEl.value === "string") {
-        text = inputEl.value;
+        text = inputEl.value.trim();
       }
+      if (!text) return;
+
+      // 캐릭터 이름 호출 감지
+      var charName = (window.currentCharacterName || "").trim();
+      var isCharCall = false;
+      if (charName) {
+        try {
+          var bridge = window.GhostCoreBridge;
+          var extracted = bridge ? bridge.extractCharacterCallText(text) : null;
+          isCharCall = (extracted !== null && extracted !== undefined);
+        } catch(e) {}
+      }
+
+      if (isCharCall) {
+        // 1) showBubble 훅 먼저 등록 (originalHandleUserSubmit 실행 전)
+        var _db = ensureFirebase();
+        if (_db && firebaseRef && charName) {
+          window._socialChatBubbleHook = function(line) {
+            window._socialChatBubbleHook = null; // 1회만 실행
+            if (!line || !line.trim()) return;
+            firebaseRef.push({
+              user_id: "char_" + charName,
+              nickname: charName,
+              text: line.trim(),
+              ts: Date.now()
+            });
+          };
+        }
+        // 2) 캐릭터-챗 로직 실행 (userInput.value를 읽으므로 input 비우기 전에 호출)
+        originalHandleUserSubmit();
+        // 3) 소셜챗에 사용자 메시지 전송 (내부에서 input.value="" 처리)
+        sendSocialMessage(text);
+        return;
+      }
+
       sendSocialMessage(text);
     };
   }
