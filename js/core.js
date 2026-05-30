@@ -1904,7 +1904,7 @@ function getCharacterCallAliases(name) {
     aliases.push("접수원", "하루", "하루야");
   }
 
-  aliases.push("마이파이", "마이파", "얘", "야", "저기", "있잖아", "잠깐");
+  aliases.push("마이파이", "얘", "야", "저기", "있잖아", "잠깐");
   return Array.from(new Set(aliases.filter(Boolean)));
 }
 
