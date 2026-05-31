@@ -60,13 +60,8 @@
   function enterGame(url, bgmKey){
     if (!overlay || !frame) return;
     const isMessenger = (bgmKey === "messenger");
-    // 프리로드로 이미 같은 src가 세팅돼 있으면 재로드 생략 (SignalBus 구독 유지)
-    if (!frame.src || frame.src !== (new URL(url, location.href).href)) {
-      frame.src = url;
-    }
+
     // [순서 중요] chatPanel·body 클래스·모드 설정을 overlay 표시 전에 먼저 처리
-    // → overlay.classList.remove("hidden") 전에 숨겨야
-    //   오버레이가 열릴 때 채팅창이 잠깐 보이는 플리커 현상을 방지할 수 있음
     if (chatPanel) chatPanel.classList.add("hidden");
     if (body) body.classList.add("is-game-mode");
 
@@ -93,7 +88,27 @@
       }
     } catch(e) {}
 
-    overlay.classList.remove("hidden");
+    const targetHref = new URL(url, location.href).href;
+    const srcAlreadySet = (frame.src === targetHref);
+
+    if (srcAlreadySet) {
+      // 이미 같은 src → 바로 표시 (프리로드된 경우: 실시간톡 또는 같은 게임 재진입)
+      overlay.classList.remove("hidden");
+    } else {
+      // src가 달라지는 경우(프리로드된 social-messenger → 게임 등):
+      // iframe이 이전 페이지를 보여주는 플리커를 막기 위해
+      // overlay는 hidden 유지한 채 src만 먼저 바꾸고, load 완료 후 표시
+      frame.src = url;
+      var _loadTimer = setTimeout(function() {
+        // load 이벤트가 늦거나 안 오는 경우 대비 최대 1.5초 후 강제 표시
+        overlay.classList.remove("hidden");
+      }, 1500);
+      frame.addEventListener("load", function _onLoad() {
+        frame.removeEventListener("load", _onLoad);
+        clearTimeout(_loadTimer);
+        overlay.classList.remove("hidden");
+      });
+    }
     // Live2D 게임모드 크기 즉시 적용 (MutationObserver 타이밍 보완)
     setTimeout(function() {
       try { if (typeof window._applyLive2DGameMode === "function") window._applyLive2DGameMode(); } catch(e) {}
