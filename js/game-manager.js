@@ -64,7 +64,12 @@
     if (!frame.src || frame.src !== (new URL(url, location.href).href)) {
       frame.src = url;
     }
-    overlay.classList.remove("hidden");
+    // [순서 중요] chatPanel·body 클래스·모드 설정을 overlay 표시 전에 먼저 처리
+    // → overlay.classList.remove("hidden") 전에 숨겨야
+    //   오버레이가 열릴 때 채팅창이 잠깐 보이는 플리커 현상을 방지할 수 있음
+    if (chatPanel) chatPanel.classList.add("hidden");
+    if (body) body.classList.add("is-game-mode");
+
     try { overlay.dataset.mode = bgmKey || ""; } catch(e) {}
     // [X-only 닫기 버튼] 일부 게임(구구단/덧셈주사위/꿈틀이도형추적자/수학탐험대)에서만 외부 ✕ 표시
     const xOnly = (bgmKey === "game1" || bgmKey === "game2" || bgmKey === "game3" || bgmKey === "game4");
@@ -75,9 +80,6 @@
     try {
       if (closeBtn) closeBtn.style.display = xOnly ? "inline-flex" : "none";
     } catch(e) {}
-
-
-    
 
     // 실시간 톡 화면에서는 외부 상단바를 확실히 숨기기 위한 모드 클래스
     try {
@@ -90,8 +92,8 @@
         overlay.classList.remove("mode-messenger");
       }
     } catch(e) {}
-if (chatPanel) chatPanel.classList.add("hidden");
-    if (body) body.classList.add("is-game-mode");
+
+    overlay.classList.remove("hidden");
     // Live2D 게임모드 크기 즉시 적용 (MutationObserver 타이밍 보완)
     setTimeout(function() {
       try { if (typeof window._applyLive2DGameMode === "function") window._applyLive2DGameMode(); } catch(e) {}

@@ -2563,6 +2563,23 @@ attachEvents();
       if (d.type === "CHAR_REPLY" && d.text) {
         try { sendCharacterMessage(String(d.text)); } catch(e) {}
       }
+      // [always-listen / game-manager] 상위 페이지에서 텍스트 전송 요청
+      // sendMessengerText() → postMessage({type:"WG_MESSENGER_SEND_TEXT", text}) 경로
+      if (d.type === "WG_MESSENGER_SEND_TEXT" && d.text) {
+        try {
+          var clean = String(d.text).trim();
+          if (clean) {
+            sendTextMessage(clean);
+            // 내가 보낸 메시지에 캐릭터 이름이 포함된 경우 즉시 답변
+            // (sendCurrentMessage와 동일한 패턴)
+            try { maybeCharacterReply({ text: clean, user_id: "", _charReply: false }); } catch(e) {}
+          }
+        } catch(e) {}
+      }
+      // [always-listen] 음성 인식으로 메신저 입력창 포커스 요청
+      if (d.type === "WG_MESSENGER_FOCUS_INPUT") {
+        try { if (msgInput) msgInput.focus(); } catch(e) {}
+      }
     } catch (e) {}
   });
 
