@@ -3368,7 +3368,7 @@ body.always-listen-center #bubbleWrapper .bubble::after {
 #bg-container, #waveBackground, #snowLayer,
 #ghostContainer, #bubbleWrapper,
 #chatDock,
-#clockWidget, #questStatusBar,
+#clockWidget, #questStatusBar, #broadcastChatOverlay,
 #notebook-menu-overlay, #boardPanel, #manualPanel,
 #teachModal, #bgSelectPanel, #boardWriteModal {
   --plx-x: 0px;
@@ -3470,4 +3470,21 @@ body.live2d-active #ghost img {
 }
 body.live2d-active #ghost img {
   display: none !important;
+}
+
+/* ── 방송방 모드: 모바일 말풍선 위치 + 꼬리 방향 ── */
+@media (max-width: 768px) {
+  body.broadcast-room-mode #bubbleWrapper {
+    right: 2vw !important;
+    bottom: 72% !important;
+    max-width: 48vw !important;
+  }
+  /* 꼬리를 아래쪽으로 (캐릭터 머리 위 말풍선이므로) */
+  body.broadcast-room-mode .bubble::after {
+    right: 18px !important;
+    bottom: -8px !important;
+    top: auto !important;
+    left: auto !important;
+    transform: rotate(45deg) !important;
+  }
 }

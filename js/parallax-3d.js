@@ -31,7 +31,7 @@
       tx: _isMob ? 6 : 16, ty: 0 },  /* 모바일: 16→6 축소, Y 고정 */
     { ids: ['chatDock'],
       tx: _isMob ? 3 :  5, ty: _isMob ? 2 : 3 },
-    { ids: ['clockWidget', 'questStatusBar'],
+    { ids: ['clockWidget', 'questStatusBar', 'broadcastChatOverlay'],
       tx:  6, ty:  4 },
     { ids: ['notebook-menu-overlay', 'boardPanel', 'manualPanel',
              'teachModal', 'bgSelectPanel', 'boardWriteModal'],

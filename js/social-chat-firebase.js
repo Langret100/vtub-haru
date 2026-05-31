@@ -419,6 +419,36 @@ function setModeSocial(enabled) {
       } catch (e) {}
     }
     updatePlusSocialButtonLabel();
+    // 방송방 오버레이에 모드 전환 알림
+    try { window.dispatchEvent(new CustomEvent("ghost:social-mode-changed")); } catch(e) {}
+
+    // sendBtn에 소셜챗 전송 리스너 직접 보완 (handleUserSubmit 패치 우회 방지)
+    _patchSendBtnDirect(enabled);
+  }
+
+  var _socialSendBtnHandler = null;
+  function _patchSendBtnDirect(enabled) {
+    var sb = document.getElementById("sendBtn");
+    var ui = document.getElementById("userInput");
+    if (!sb || !ui) return;
+    // 기존 직접 리스너 제거
+    if (_socialSendBtnHandler) {
+      sb.removeEventListener("click", _socialSendBtnHandler, true);
+      ui.removeEventListener("keydown", _socialSendBtnHandler, true);
+      _socialSendBtnHandler = null;
+    }
+    if (!enabled) return;
+    _socialSendBtnHandler = function(e) {
+      if (e.type === "keydown" && (e.key !== "Enter" || e.isComposing)) return;
+      e.stopImmediatePropagation();
+      var text = ui.value.trim();
+      if (!text) return;
+      ui.value = "";
+      sendSocialMessage(text);
+    };
+    // capture:true로 기존 핸들러보다 먼저 실행
+    sb.addEventListener("click", _socialSendBtnHandler, true);
+    ui.addEventListener("keydown", _socialSendBtnHandler, true);
   }
 
   function toggleMode() {
@@ -436,15 +466,19 @@ function setModeSocial(enabled) {
         return originalHandleUserSubmit();
       }
 
-      var inputEl = userInput || document.getElementById("userInput");
-      var text = "";
-      if (inputEl && typeof inputEl.value === "string") {
-        text = inputEl.value.trim();
-      }
+      // 항상 DOM에서 직접 읽어서 값 누락 방지
+      var inputEl = document.getElementById("userInput");
+      var text = (inputEl ? inputEl.value : "").trim();
       if (!text) return;
 
-      // 캐릭터 이름 호출 감지
-      var charName = (window.currentCharacterName || "").trim();
+      // 캐릭터 이름 호출 감지 (GhostCoreBridge 우선)
+      var charName = "";
+      try {
+        charName = (window.GhostCoreBridge && window.GhostCoreBridge.getCurrentCharacterName)
+          ? window.GhostCoreBridge.getCurrentCharacterName()
+          : "";
+      } catch(e) {}
+
       var isCharCall = false;
       if (charName) {
         try {
@@ -455,11 +489,10 @@ function setModeSocial(enabled) {
       }
 
       if (isCharCall) {
-        // 1) showBubble 훅 먼저 등록 (originalHandleUserSubmit 실행 전)
         var _db = ensureFirebase();
         if (_db && firebaseRef && charName) {
           window._socialChatBubbleHook = function(line) {
-            window._socialChatBubbleHook = null; // 1회만 실행
+            window._socialChatBubbleHook = null;
             if (!line || !line.trim()) return;
             firebaseRef.push({
               user_id: "char_" + charName,
@@ -469,9 +502,7 @@ function setModeSocial(enabled) {
             });
           };
         }
-        // 2) 캐릭터-챗 로직 실행 (userInput.value를 읽으므로 input 비우기 전에 호출)
         originalHandleUserSubmit();
-        // 3) 소셜챗에 사용자 메시지 전송 (내부에서 input.value="" 처리)
         sendSocialMessage(text);
         return;
       }

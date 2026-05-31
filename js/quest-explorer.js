@@ -205,6 +205,14 @@
     document.body.appendChild(bar);
     questStatusBar = bar;
 
+    // 생성 직후 + 렌더 완료 후 재측정 (시계가 아직 paint 안됐을 수 있으므로)
+    positionQuestBar(bar);
+    requestAnimationFrame(function() {
+      positionQuestBar(bar);
+      // 한 번 더 — 폰트 로드 후 시계 크기가 확정될 때
+      setTimeout(function() { positionQuestBar(bar); }, 300);
+    });
+
     // 코인 상태 표시 모듈이 있다면, 퀘스트 바 생성 후 한 번 갱신을 요청
     try {
       if (window.__ghostRefreshCoinStatusBar) {
@@ -214,6 +222,33 @@
 
     return bar;
   }
+
+  function positionQuestBar(bar) {
+    if (!bar) return;
+    var isMob = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+    if (!isMob) return; // PC는 CSS top:122px 그대로
+
+    // 모바일 시계: top:10px, font-size:48px, line-height~1.2 → 하단 약 68px
+    var CLOCK_FALLBACK_BOTTOM = 68;
+
+    var clock = document.getElementById("clockWidget");
+    var clockBottom = CLOCK_FALLBACK_BOTTOM;
+    if (clock) {
+      var rect = clock.getBoundingClientRect();
+      // rect.bottom이 0이면 아직 렌더 전이므로 폴백 사용
+      if (rect.bottom > 20) {
+        clockBottom = rect.bottom;
+      }
+    }
+    bar.style.top = (clockBottom + 4) + "px";
+  }
+
+  // 광고판 on/off 시 퀘스트바 위치 재조정 (시계는 이제 광고판에 안 밀림)
+  window.addEventListener("ghost:adbar-changed", function() {
+    var bar = document.getElementById("questStatusBar");
+    if (bar) positionQuestBar(bar);
+  });
 
   function updateQuestStatusText() {
     try {
@@ -441,7 +476,7 @@
       @media (max-width: 768px) {
         .quest-status-bar {
           left: 14px;
-          top: 116px; /* 모바일에서도 70px 더 아래 */
+          /* top은 JS positionQuestBar()가 동적으로 설정 */
         }
         .quest-status-title {
           font-size: 14px;

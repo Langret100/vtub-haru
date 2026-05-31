@@ -309,8 +309,10 @@ function getProjectRoot_() {
   }
 
   function setBaseOffsets_(enabled) {
-    applyOffset_(document.getElementById("clockWidget"), enabled);
-    applyOffset_(document.getElementById("questStatusBar"), enabled);
+    // clockWidget과 questStatusBar는 canvasWrapper 안에 위치하므로
+    // 광고판 오프셋 적용 제외 — 위치는 각 모듈이 자체 관리
+    // applyOffset_(document.getElementById("clockWidget"), enabled);
+    // applyOffset_(document.getElementById("questStatusBar"), enabled);
   }
 
   // =========================
