@@ -192,7 +192,7 @@ function initBackgroundSystem() {
 
     // 모바일: 채팅창이 화면 너비 침범 안하게 너비 제한
     if (isMob) {
-      el.style.width = Math.min(160, window.innerWidth * 0.36) + "px";
+      el.style.width = Math.min(130, window.innerWidth * 0.28) + "px";
     } else {
       el.style.width = "420px";
     }
@@ -211,7 +211,7 @@ function initBackgroundSystem() {
                      (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
       handle.style.top = topPx + "px";
       handle.style.maxHeight = maxH;
-      handle.style.width = isMobH ? Math.min(160, window.innerWidth * 0.36) + "px" : "420px";
+      handle.style.width = isMobH ? Math.min(130, window.innerWidth * 0.28) + "px" : "420px";
       // 핸들 height = 오버레이 실제 렌더 높이 (항상 maxHeight 이하)
       requestAnimationFrame(function() {
         const ell = document.getElementById("broadcastChatOverlay");
@@ -500,9 +500,8 @@ function initBackgroundSystem() {
     _bcResizeHandler = function() { updateOverlayBounds(); };
     window.addEventListener("resize", _bcResizeHandler);
     startWallpaperTimer();
-
-    // 소셜챗 ↔ 캐릭터챗 전환 시 카운터 리셋 (새 모드에서 중복 표시 방지)
     window.addEventListener("ghost:social-mode-changed", _bcOnSocialModeChange);
+    try { window.dispatchEvent(new CustomEvent("ghost:broadcast-mode-changed", { detail: { active: true } })); } catch(e) {}
   }
 
   function _bcOnSocialModeChange() {
@@ -522,6 +521,7 @@ function initBackgroundSystem() {
     document.body.classList.remove("broadcast-room-mode");
     stopBroadcastObserver();
     removeBroadcastOverlay();
+    try { window.dispatchEvent(new CustomEvent("ghost:broadcast-mode-changed", { detail: { active: false } })); } catch(e) {}
   }
   // ─────────────────────────────────────────────────────────────────
 
