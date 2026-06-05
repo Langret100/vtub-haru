@@ -444,7 +444,7 @@ body.is-game-mode #ghostContainer {
     #plusMenu {
       position: absolute;
       right: 0;
-      bottom: 40px;
+      bottom: calc(100% + 6px);
 	      /* 오른쪽 "빈 공간"을 줄이기 위해 폭을 조금 더 슬림하게 */
 	      width: 170px;
       background: rgba(9,13,30,0.98);
@@ -3185,7 +3185,7 @@ body {
 body.always-listen-center #ghostContainer {
   left: 50% !important;
   right: auto !important;
-  transform: translateX(-50%) scale(1.1);
+  transform: translateX(-50%) scale(1.1) translate3d(0px, 0px, 0) !important;
   transform-origin: bottom center;
   justify-content: center;
 }
@@ -3208,11 +3208,11 @@ body.always-listen-center #bubbleWrapper .bubble::after {
 }
 @media (max-width: 768px) {
   body.always-listen-center #ghostContainer {
-    left: 50% !important;
-    right: auto !important;
-    bottom: 90px !important;
-    transform: translateX(-50%) scale(2.2);
-    transform-origin: bottom center;
+    left: auto !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: translate3d(0px, 0px, 0) !important;
+    transform-origin: bottom right;
   }
   body.always-listen-center #ghost {
     transform: scale(1);
@@ -3316,7 +3316,7 @@ body.always-listen-center #bubbleWrapper .bubble::after {
   /* + 메뉴: 위쪽으로 펼쳐지도록 */
   #plusMenu {
     top: auto;
-    bottom: 44px;
+    bottom: calc(100% + 6px);
     left: auto;
     right: 0;
   }
@@ -3487,4 +3487,565 @@ body.live2d-active #ghost img {
     left: auto !important;
     transform: rotate(45deg) !important;
   }
+}
+
+
+/* ══════════════════════════════════════════════════
+   방송방 모드 — 전체 UI 통일 테마 (블루 글래스모피즘)
+   ══════════════════════════════════════════════════ */
+
+/* 공통 변수 */
+body.broadcast-room-mode {
+  --bc-bg: rgba(10,55,100,0.45);
+  --bc-bg-light: rgba(15,80,150,0.38);
+  --bc-border: none;
+  --bc-blur: blur(28px) saturate(1.5);
+  --bc-text: rgba(220,245,255,0.97);
+  --bc-text-sub: rgba(180,225,255,0.75);
+  --bc-radius: 18px;
+  --bc-shadow: 0 12px 40px rgba(0,40,120,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+/* 방송방 모드 스크롤바 통일 */
+body.broadcast-room-mode ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+body.broadcast-room-mode ::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.broadcast-room-mode ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(100,190,255,0.55), rgba(40,120,240,0.42));
+  border-radius: 999px;
+}
+body.broadcast-room-mode ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(130,210,255,0.72), rgba(60,150,255,0.6));
+}
+
+/* + 메뉴 */
+body.broadcast-room-mode #plusMenu {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border-radius: 16px !important;
+}
+body.broadcast-room-mode #plusMenu button {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode #plusMenu button:hover {
+  background: rgba(40,130,220,0.28) !important;
+}
+
+/* 배경 선택 패널 */
+body.broadcast-room-mode #bgSelectPanel {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border-radius: var(--bc-radius) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode #bgSelectPanel .bg-option {
+  background: rgba(30,110,200,0.28) !important;
+  border: none !important;
+  color: var(--bc-text) !important;
+  border-radius: 10px !important;
+}
+body.broadcast-room-mode #bgSelectPanel .bg-option:hover,
+body.broadcast-room-mode #bgSelectPanel .bg-option.active {
+  background: rgba(50,160,255,0.42) !important;
+}
+body.broadcast-room-mode #bgSelectPanel button#bgPanelConfirm {
+  background: rgba(40,150,240,0.5) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+}
+
+/* 수첩(노트북) 오버레이 */
+body.broadcast-room-mode .notebook-wrapper {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .notebook-tabs .tab-btn {
+  background: rgba(20,90,180,0.32) !important;
+  border: none !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px !important;
+}
+body.broadcast-room-mode .notebook-tabs .tab-btn.active {
+  background: rgba(40,150,255,0.48) !important;
+}
+body.broadcast-room-mode .memo-card {
+  background: rgba(15,70,140,0.35) !important;
+  border-color: rgba(80,170,255,0.22) !important;
+  color: var(--bc-text) !important;
+  box-shadow: 0 3px 0 rgba(0,60,140,0.3) !important;
+}
+
+/* 매뉴얼 패널 */
+body.broadcast-room-mode .manual-content,
+body.broadcast-room-mode .manual-backdrop {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  backdrop-filter: var(--bc-blur) !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+
+/* 게시판 패널 */
+body.broadcast-room-mode .board-content,
+body.broadcast-room-mode .board-write-content {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  backdrop-filter: var(--bc-blur) !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+
+/* 티칭 모달 */
+body.broadcast-room-mode .teach-modal {
+  background: var(--bc-bg) !important;
+  border: none !important;
+  backdrop-filter: var(--bc-blur) !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+
+/* 실시간-챗(게임 오버레이) 배경 */
+body.broadcast-room-mode .game-overlay:not(.x-only) {
+  background: rgba(5,35,75,0.55) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* 공통 input/textarea/button 색상 */
+body.broadcast-room-mode .notebook-overlay input,
+body.broadcast-room-mode .notebook-overlay textarea,
+body.broadcast-room-mode .manual-content input,
+body.broadcast-room-mode .manual-content textarea,
+body.broadcast-room-mode .board-content input,
+body.broadcast-room-mode .board-content textarea,
+body.broadcast-room-mode .teach-modal input,
+body.broadcast-room-mode .teach-modal textarea {
+  background: rgba(10,50,100,0.45) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px !important;
+}
+body.broadcast-room-mode .notebook-overlay button:not(.memo-card),
+body.broadcast-room-mode .manual-content button,
+body.broadcast-room-mode .board-content button,
+body.broadcast-room-mode .teach-modal button {
+  background: rgba(30,120,220,0.42) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+/* 헤딩/타이틀 색상 */
+body.broadcast-room-mode .notebook-overlay h1,
+body.broadcast-room-mode .notebook-overlay h2,
+body.broadcast-room-mode .notebook-overlay h3,
+body.broadcast-room-mode .manual-content h1,
+body.broadcast-room-mode .manual-content h2,
+body.broadcast-room-mode .board-content h1,
+body.broadcast-room-mode .board-content h2,
+body.broadcast-room-mode .teach-modal h1,
+body.broadcast-room-mode .teach-modal h2 {
+  color: rgba(200,240,255,0.98) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   방송방 모드 — 누락된 UI 창 테마 보완
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 수첩(메뉴) 내부 세부 요소 ── */
+/* notebook-body 배경 그라디언트 제거 */
+body.broadcast-room-mode .notebook-body {
+  background: rgba(10,55,120,0.28) !important;
+  border-radius: 12px !important;
+}
+/* 수첩 왼쪽 영역 구분선 */
+body.broadcast-room-mode .notebook-left {
+  border-right-color: rgba(100,190,255,0.2) !important;
+}
+/* 수첩 탭(상단 탭 바) */
+body.broadcast-room-mode .notebook-tabs .tab {
+  background: rgba(20,90,180,0.32) !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+body.broadcast-room-mode .notebook-tabs .bookmark {
+  background: rgba(40,120,220,0.42) !important;
+  color: var(--bc-text) !important;
+}
+/* 수첩 제목·부제목·코인 표시 */
+body.broadcast-room-mode .notebook-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode .notebook-subtitle {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .notebook-coin-hud {
+  color: rgba(150,220,255,0.9) !important;
+}
+/* 메모 카드 핀(::before) 색상 */
+body.broadcast-room-mode .memo-card::before {
+  background: rgba(50,160,255,0.32) !important;
+}
+/* 수첩 닫기 버튼 */
+body.broadcast-room-mode .notebook-close-btn {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .notebook-close-btn:hover {
+  background: rgba(40,130,220,0.22) !important;
+}
+
+/* ── 출석 도장 창 ── */
+body.broadcast-room-mode .attendance-panel {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+body.broadcast-room-mode .attendance-header {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode .attendance-subtitle {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .attendance-cell {
+  background: rgba(15,70,150,0.35) !important;
+  box-shadow: 0 3px 8px rgba(0,40,120,0.2) !important;
+}
+body.broadcast-room-mode .attendance-day-label {
+  color: rgba(190,235,255,0.95) !important;
+}
+body.broadcast-room-mode .attendance-close-btn {
+  background: rgba(30,120,220,0.55) !important;
+  color: #fff !important;
+}
+
+/* ── 편지함 창 ── */
+body.broadcast-room-mode .letter-wrapper {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+body.broadcast-room-mode .letter-title,
+body.broadcast-room-mode .letter-subtitle,
+body.broadcast-room-mode .letter-list-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode .letter-desc,
+body.broadcast-room-mode .letter-label,
+body.broadcast-room-mode .letter-empty,
+body.broadcast-room-mode .letter-preview-date,
+body.broadcast-room-mode .letter-item-date,
+body.broadcast-room-mode .letter-status {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .letter-preview-content,
+body.broadcast-room-mode .letter-item-title {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .letter-list {
+  background: rgba(10,50,110,0.38) !important;
+  border-color: rgba(80,170,255,0.2) !important;
+}
+body.broadcast-room-mode .letter-item {
+  background: rgba(15,70,150,0.32) !important;
+  border-color: rgba(80,170,255,0.22) !important;
+}
+body.broadcast-room-mode .letter-item:hover {
+  background: rgba(30,110,220,0.42) !important;
+  border-color: rgba(100,200,255,0.38) !important;
+}
+body.broadcast-room-mode .letter-preview {
+  border-top-color: rgba(80,170,255,0.2) !important;
+}
+body.broadcast-room-mode .letter-input,
+body.broadcast-room-mode .letter-textarea {
+  background: rgba(10,50,100,0.45) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px !important;
+}
+body.broadcast-room-mode .letter-save-btn,
+body.broadcast-room-mode .letter-action-btn {
+  background: rgba(30,120,220,0.55) !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  border: none !important;
+}
+body.broadcast-room-mode .letter-close {
+  color: rgba(150,210,255,0.82) !important;
+}
+
+/* ── 게시판 창 ── */
+body.broadcast-room-mode .board-inner {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+body.broadcast-room-mode .board-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode .board-list {
+  background: rgba(10,50,110,0.38) !important;
+}
+body.broadcast-room-mode .board-item {
+  background: rgba(15,70,150,0.32) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .board-item:hover {
+  background: rgba(30,110,220,0.38) !important;
+}
+body.broadcast-room-mode .board-item-meta {
+  color: rgba(150,210,255,0.75) !important;
+}
+body.broadcast-room-mode .board-reload-btn,
+body.broadcast-room-mode .board-write-btn,
+body.broadcast-room-mode .board-page-btn,
+body.broadcast-room-mode .board-save-btn,
+body.broadcast-room-mode .board-close-btn,
+body.broadcast-room-mode .board-close {
+  background: rgba(30,120,220,0.42) !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.broadcast-room-mode .board-page-btn:disabled {
+  background: rgba(30,120,220,0.2) !important;
+  opacity: 0.45 !important;
+}
+body.broadcast-room-mode .board-input,
+body.broadcast-room-mode .board-textarea {
+  background: rgba(10,50,100,0.45) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px !important;
+}
+body.broadcast-room-mode .board-hint {
+  color: rgba(150,210,255,0.75) !important;
+}
+/* 글쓰기 모달 */
+body.broadcast-room-mode .board-write-modal-box {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .board-write-modal-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+
+/* ── 사용 설명서(manual) 창 ── */
+body.broadcast-room-mode .manual-inner {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+body.broadcast-room-mode .manual-header {
+  background: rgba(5,35,80,0.75) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .manual-title {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .manual-close {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .manual-list {
+  background: rgba(8,45,100,0.55) !important;
+  border-right-color: rgba(80,170,255,0.2) !important;
+}
+body.broadcast-room-mode .manual-item {
+  background: rgba(15,70,150,0.35) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .manual-item:hover {
+  background: rgba(30,110,220,0.42) !important;
+}
+body.broadcast-room-mode .manual-item.active {
+  background: rgba(40,150,255,0.5) !important;
+  color: #fff !important;
+}
+body.broadcast-room-mode .manual-detail {
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .manual-detail h3 {
+  color: rgba(200,240,255,0.98) !important;
+}
+
+/* ── 로그인 창 ── */
+body.broadcast-room-mode .login-inner {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+  color: var(--bc-text) !important;
+  border-radius: var(--bc-radius) !important;
+}
+body.broadcast-room-mode .login-tab-btn {
+  background: rgba(20,90,180,0.32) !important;
+  border: none !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .login-tab-btn.active {
+  background: rgba(40,150,255,0.5) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+body.broadcast-room-mode .login-label,
+body.broadcast-room-mode .login-status {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .login-input {
+  background: rgba(10,50,100,0.45) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+  border-radius: 8px !important;
+}
+body.broadcast-room-mode .login-submit-btn,
+body.broadcast-room-mode .login-submit-main {
+  background: rgba(30,120,220,0.65) !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.broadcast-room-mode .login-secondary-btn {
+  background: rgba(15,70,150,0.42) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .login-secondary-btn:hover {
+  background: rgba(30,110,220,0.55) !important;
+}
+body.broadcast-room-mode .login-logout-btn {
+  border-color: rgba(248,113,113,0.7) !important;
+  color: rgba(255,190,190,0.9) !important;
+}
+body.broadcast-room-mode .login-auto-card {
+  background: var(--bc-bg) !important;
+  backdrop-filter: var(--bc-blur) !important;
+  color: var(--bc-text) !important;
+  border: none !important;
+  box-shadow: var(--bc-shadow) !important;
+}
+
+/* ── 퀘스트 창 (JS <style> 태그 오버라이드) ── */
+body.broadcast-room-mode #questExplorerOverlay .qe-panel {
+  background: rgba(10,55,100,0.55) !important;
+  backdrop-filter: blur(28px) saturate(1.5) !important;
+  border: none !important;
+  box-shadow: 0 12px 40px rgba(0,40,120,0.28), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+  border-radius: 18px !important;
+  color: rgba(220,245,255,0.97) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-subtitle,
+body.broadcast-room-mode #questExplorerOverlay .qe-footer,
+body.broadcast-room-mode #questExplorerOverlay .qe-footer-text {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-close {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-card {
+  background: rgba(15,70,150,0.35) !important;
+  border: 1px solid rgba(80,170,255,0.22) !important;
+  box-shadow: 0 4px 0 rgba(0,60,140,0.3) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-card::before {
+  background: rgba(50,160,255,0.32) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-card-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-card-desc {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode #questExplorerOverlay .qe-card.done {
+  background: rgba(20,90,180,0.45) !important;
+  box-shadow: 0 3px 0 rgba(0,60,140,0.3), 0 0 0 1px rgba(80,170,255,0.3) !important;
+}
+
+/* ── 랭킹 창 (JS inline style 오버라이드) ── */
+body.broadcast-room-mode #ranking-box {
+  background: rgba(10,55,100,0.55) !important;
+  backdrop-filter: blur(28px) saturate(1.5) !important;
+  border: none !important;
+  box-shadow: 0 12px 40px rgba(0,40,120,0.28), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+  border-radius: 18px !important;
+  color: rgba(220,245,255,0.97) !important;
+}
+body.broadcast-room-mode #rk-header {
+  background: rgba(5,35,80,0.75) !important;
+  color: rgba(220,245,255,0.97) !important;
+}
+body.broadcast-room-mode #rk-header > div {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode #rk-tabs {
+  background: rgba(8,45,100,0.55) !important;
+  border-bottom-color: rgba(80,170,255,0.2) !important;
+}
+body.broadcast-room-mode #rk-tabs .rk-tab {
+  color: rgba(220,245,255,0.97) !important;
+  border-right-color: rgba(80,170,255,0.15) !important;
+}
+body.broadcast-room-mode #rk-close-btn {
+  color: rgba(220,245,255,0.97) !important;
+}
+body.broadcast-room-mode #rk-list-wrap {
+  background: transparent !important;
+  color: rgba(220,245,255,0.97) !important;
+}
+body.broadcast-room-mode #rk-my-best {
+  background: rgba(15,80,150,0.38) !important;
+  border-top-color: rgba(80,170,255,0.2) !important;
+  color: rgba(220,245,255,0.97) !important;
+}
+
+/* ── 가르치기(teach) 창 세부 요소 보완 ── */
+body.broadcast-room-mode .teach-title {
+  color: rgba(200,240,255,0.98) !important;
+}
+body.broadcast-room-mode .teach-label {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .teach-status {
+  color: rgba(150,210,255,0.82) !important;
+}
+body.broadcast-room-mode .teach-input,
+body.broadcast-room-mode .teach-textarea,
+body.broadcast-room-mode .teach-select {
+  background: rgba(10,50,100,0.45) !important;
+  border: 1px solid rgba(100,190,255,0.28) !important;
+  color: var(--bc-text) !important;
+}
+body.broadcast-room-mode .teach-buttons button {
+  background: rgba(30,120,220,0.42) !important;
+  color: #fff !important;
+  border: none !important;
 }

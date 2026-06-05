@@ -788,6 +788,228 @@
       margin-bottom: 2px;
       padding-left: 2px;
     }
+
+    /* ══════════════════════════════════════════════════════════
+       방송방 에어로(Aero) 테마 — body.ae-mode 클래스 기준
+       블루 글래스모피즘으로 메인 UI와 통일
+       ══════════════════════════════════════════════════════════ */
+
+    /* 스크롤바 — 방송방 모드 */
+    body.ae-mode ::-webkit-scrollbar { width: 6px; }
+    body.ae-mode ::-webkit-scrollbar-track { background: transparent; }
+    body.ae-mode ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(100,190,255,0.55), rgba(60,140,240,0.4));
+      border-radius: 999px;
+    }
+
+    /* 전체 쉘 */
+    body.ae-mode .messenger-shell {
+      background: rgba(8, 28, 64, 0.55);
+      backdrop-filter: blur(32px) saturate(1.6);
+    }
+
+    /* 상단바 */
+    body.ae-mode .messenger-topbar {
+      background: rgba(5, 20, 55, 0.72);
+      box-shadow: 0 1px 0 rgba(100,190,255,0.14);
+    }
+    body.ae-mode .messenger-topbar-close {
+      color: rgba(180,225,255,0.85);
+    }
+    body.ae-mode .messenger-topbar-roombtn {
+      background: rgba(20, 80, 180, 0.38);
+      border: 1px solid rgba(100,190,255,0.22);
+      color: rgba(220,245,255,0.97);
+    }
+    body.ae-mode .messenger-topbar-roombtn:active {
+      background: rgba(30,110,230,0.5);
+    }
+
+    /* 채팅 본문 배경 */
+    body.ae-mode .messenger-body {
+      background: transparent;
+    }
+
+    /* 날짜 구분선 */
+    body.ae-mode .date-separator {
+      color: rgba(150,210,255,0.7);
+    }
+    body.ae-mode .date-separator::before,
+    body.ae-mode .date-separator::after {
+      background: rgba(100,190,255,0.2);
+    }
+
+    /* 말풍선 — 상대방 */
+    body.ae-mode .msg-row.other .bubble {
+      background: rgba(20, 80, 170, 0.42);
+      color: rgba(220,245,255,0.97);
+      border: 1px solid rgba(100,190,255,0.18);
+      box-shadow: 0 4px 14px rgba(0,40,120,0.2);
+    }
+    /* 말풍선 — 나 */
+    body.ae-mode .msg-row.me .bubble {
+      background: rgba(37,99,235,0.75);
+      color: #fff;
+      border: 1px solid rgba(120,200,255,0.22);
+      box-shadow: 0 4px 14px rgba(0,60,180,0.28);
+    }
+    /* 말풍선 — 캐릭터 자동답변 */
+    body.ae-mode .msg-row.char-reply .bubble.char-reply-bubble {
+      background: linear-gradient(135deg, rgba(40,160,255,0.28), rgba(20,80,200,0.38));
+      color: rgba(200,240,255,0.98);
+      border: 1.5px solid rgba(100,190,255,0.38);
+    }
+    body.ae-mode .msg-row.char-reply .sender-name {
+      color: rgba(130,210,255,0.9);
+    }
+    /* 이모티콘 전용 말풍선 투명 유지 */
+    body.ae-mode .bubble.emoji-only,
+    body.ae-mode .msg-row.me .bubble.emoji-only,
+    body.ae-mode .msg-row.other .bubble.emoji-only {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    /* 사진 버블 */
+    body.ae-mode .bubble.photo-bubble {
+      background: rgba(10,50,120,0.38) !important;
+    }
+    /* 파일 버블 */
+    body.ae-mode .file-bubble {
+      background: rgba(10,50,120,0.38) !important;
+      color: rgba(220,245,255,0.97) !important;
+    }
+    body.ae-mode .msg-row.me .file-bubble {
+      background: rgba(37,99,235,0.55) !important;
+      color: #fff !important;
+    }
+    body.ae-mode .file-link { color: rgba(130,210,255,0.95) !important; }
+
+    /* 메타(시간) */
+    body.ae-mode .msg-meta { color: rgba(150,210,255,0.65); }
+    /* 발신자 이름 */
+    body.ae-mode .msg-sender-name { color: rgba(130,210,255,0.9); }
+    /* 아바타 */
+    body.ae-mode .msg-avatar { background: rgba(30,80,180,0.55); }
+
+    /* 빈 방 힌트 */
+    body.ae-mode .empty-hint { color: rgba(150,210,255,0.55); }
+
+    /* 입력바 */
+    body.ae-mode .messenger-input-bar {
+      background: rgba(5, 20, 55, 0.72);
+      box-shadow: 0 -1px 0 rgba(100,190,255,0.14);
+    }
+    body.ae-mode .msg-input-wrap {
+      background: rgba(15, 55, 140, 0.45);
+      border: 1px solid rgba(100,190,255,0.22);
+    }
+    body.ae-mode .msg-input {
+      color: rgba(220,245,255,0.97);
+    }
+    body.ae-mode .msg-input::placeholder {
+      color: rgba(150,210,255,0.5);
+    }
+    body.ae-mode .msg-emoji-btn,
+    body.ae-mode .msg-camera-btn {
+      background: rgba(30,100,220,0.32);
+    }
+    body.ae-mode .msg-emoji-btn:active,
+    body.ae-mode .msg-camera-btn:active {
+      background: rgba(40,130,255,0.5);
+    }
+    body.ae-mode .send-btn {
+      background: rgba(37,99,235,0.85);
+      box-shadow: 0 6px 18px rgba(0,60,200,0.4);
+    }
+    body.ae-mode .send-btn:active {
+      background: rgba(37,99,235,1);
+    }
+
+    /* 이모티콘 패널 */
+    body.ae-mode .msg-emoji-panel {
+      background: rgba(8,28,64,0.92);
+      backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(100,190,255,0.2);
+      box-shadow: 0 16px 40px rgba(0,40,120,0.35);
+    }
+    body.ae-mode .emoji-item:active {
+      background: rgba(37,99,235,0.3);
+    }
+
+    /* 첨부 메뉴 */
+    body.ae-mode .msg-attach-menu {
+      background: rgba(8,28,64,0.94);
+      backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(100,190,255,0.2);
+      box-shadow: 0 16px 40px rgba(0,40,120,0.35);
+    }
+    body.ae-mode .msg-attach-item {
+      color: rgba(220,245,255,0.97);
+    }
+    body.ae-mode .msg-attach-item:active {
+      background: rgba(37,99,235,0.25);
+    }
+
+    /* 대화방 패널(사이드) */
+    body.ae-mode .room-panel {
+      background: rgba(5,20,55,0.82);
+      backdrop-filter: blur(28px) saturate(1.5);
+      border-right: 1px solid rgba(100,190,255,0.14);
+      box-shadow: 16px 0 36px rgba(0,40,120,0.25);
+    }
+    body.ae-mode .room-backdrop {
+      background: rgba(0,20,60,0.35);
+    }
+    body.ae-mode .room-panel-header {
+      border-bottom: 1px solid rgba(100,190,255,0.14);
+    }
+    body.ae-mode .room-panel-title {
+      color: rgba(200,240,255,0.98);
+    }
+    body.ae-mode .room-add-btn {
+      background: rgba(20,80,180,0.38);
+      border: 1px solid rgba(100,190,255,0.2);
+      color: rgba(200,240,255,0.9);
+    }
+    body.ae-mode .room-item {
+      background: rgba(15,60,150,0.32);
+      border: 1px solid rgba(100,190,255,0.15);
+    }
+    body.ae-mode .room-item.active {
+      background: rgba(30,100,230,0.42);
+      border-color: rgba(100,190,255,0.3);
+    }
+    body.ae-mode .room-item-icon {
+      background: rgba(20,80,180,0.5);
+    }
+    body.ae-mode .room-name {
+      color: rgba(220,245,255,0.97);
+    }
+    body.ae-mode .room-meta {
+      color: rgba(150,210,255,0.7);
+    }
+
+    /* YouTube 미리보기 */
+    body.ae-mode .yt-preview {
+      background: rgba(10,50,120,0.42);
+      border-color: rgba(100,190,255,0.18);
+      color: rgba(220,245,255,0.97);
+    }
+    body.ae-mode .msg-row.me .yt-preview {
+      background: rgba(20,70,180,0.45);
+    }
+    body.ae-mode .yt-host { color: rgba(150,210,255,0.7); }
+    body.ae-mode .yt-thumb { background: rgba(20,60,130,0.5); }
+
+    /* 링크 */
+    body.ae-mode .msg-link { color: rgba(130,210,255,0.95); }
+
+    /* 상태 토스트 */
+    body.ae-mode .msg-status {
+      background: rgba(5,25,65,0.9);
+      color: rgba(220,245,255,0.97);
+    }
 </style>
 </head>
 <body>
@@ -858,5 +1080,12 @@
   <script src="../js/signals.js"></script>
   <script src="../js/room-message-stream.js"></script>
   <script src="../js/social-messenger.js"></script>
+  <script>
+    /* ── 방송방(ae-mode) postMessage 수신 ── */
+    window.addEventListener("message", function(e) {
+      if (!e.data || e.data.type !== "ae-mode") return;
+      document.body.classList.toggle("ae-mode", !!e.data.active);
+    });
+  </script>
 </body>
 </html>
