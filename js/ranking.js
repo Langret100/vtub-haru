@@ -96,6 +96,7 @@ function openRankingPopup(){
 
       // 헤더
       const header = document.createElement("div");
+      header.id = "rk-header";
       header.style.display = "flex";
       header.style.alignItems = "center";
       header.style.justifyContent = "space-between";
@@ -180,6 +181,39 @@ function openRankingPopup(){
       overlay.appendChild(box);
       document.body.appendChild(overlay);
 
+      // 방송방 모드이면 JS inline style을 블루 글래스 테마로 덮어씀
+      if (document.body.classList.contains("broadcast-room-mode")) {
+        const bc = {
+          bg:       "rgba(10,55,100,0.55)",
+          bgLight:  "rgba(15,80,150,0.38)",
+          bgLighter:"rgba(8,45,100,0.55)",
+          border:   "rgba(100,190,255,0.28)",
+          text:     "rgba(220,245,255,0.97)",
+          textSub:  "rgba(180,225,255,0.75)",
+          blur:     "blur(28px) saturate(1.5)",
+          shadow:   "0 12px 40px rgba(0,40,120,0.28), inset 0 1px 0 rgba(255,255,255,0.14)"
+        };
+        box.style.background     = bc.bg;
+        box.style.backdropFilter = bc.blur;
+        box.style.border         = "none";
+        box.style.boxShadow      = bc.shadow;
+        box.style.color          = bc.text;
+        header.style.background  = bc.bgLighter;
+        title.style.color        = bc.text;
+        closeBtn.style.color     = bc.text;
+        tabs.style.background    = bc.bgLighter;
+        tabs.style.borderBottomColor = bc.border;
+        tabs.querySelectorAll(".rk-tab").forEach(t => {
+          t.style.background = "transparent";
+          t.style.color      = bc.text;
+          t.style.borderRightColor = bc.border;
+        });
+        listWrap.style.background = "transparent";
+        myBox.style.background    = bc.bgLight;
+        myBox.style.borderTopColor = bc.border;
+        myBox.style.color         = bc.text;
+      }
+
       // 외부(overlay 배경) 클릭으로도 닫기
       overlay.addEventListener("click", function(e) {
         var box = document.getElementById("ranking-box");
@@ -210,13 +244,15 @@ function openRankingPopup(){
   function switchTabGame(gameName, activeTabBtn){
     const overlay = document.getElementById("ranking-overlay");
     if (!overlay) return;
+    const isBroadcast = document.body.classList.contains("broadcast-room-mode");
     const tabs = overlay.querySelectorAll(".rk-tab");
     tabs.forEach(btn=>{
-      btn.style.background = "#f7f7f7";
+      btn.style.background = isBroadcast ? "transparent" : "#f7f7f7";
       btn.style.fontWeight = "500";
+      if (isBroadcast) btn.style.color = "rgba(220,245,255,0.97)";
     });
     if (activeTabBtn){
-      activeTabBtn.style.background = "#ffffff";
+      activeTabBtn.style.background = isBroadcast ? "rgba(40,150,255,0.38)" : "#ffffff";
       activeTabBtn.style.fontWeight = "700";
     }
     // 마지막으로 선택한 게임 이름을 저장해, 비동기 응답이 뒤늦게 와도 이전 탭의 데이터로 덮어쓰지 않도록 합니다.

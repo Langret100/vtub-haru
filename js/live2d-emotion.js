@@ -420,8 +420,11 @@
           var gm = document.body.classList.contains("is-game-mode");
           var isMob2 = window.innerWidth <= 768;
 
-          // transform 항상 제거 (parallax 등 외부 CSS 영향 차단)
-          gc2.style.setProperty("transform", "none", "important");
+          // transform 초기화 — 단, 바로바로!(PC) 중앙 모드 중엔 건드리지 않음
+          var _alCenter = document.body.classList.contains("always-listen-center");
+          if (!(_alCenter && !isMob2)) {
+            gc2.style.setProperty("transform", "none", "important");
+          }
 
           if (gm) {
             // 게임 모드: 우측 하단 작은 캐릭터 — PC/모바일 분기
@@ -474,13 +477,23 @@
             gc2.style.setProperty("position", isMob2 ? "absolute" : "absolute", "important");
             gc2.style.setProperty("z-index",  "2",        "important");
             gc2.style.removeProperty("top");
-            gc2.style.removeProperty("left");
-            gc2.style.setProperty("right",  "0",            "important");
             gc2.style.setProperty("bottom", "0",            "important");
             gc2.style.setProperty("width",  sz2.w + "px",   "important");
             gc2.style.setProperty("height", sz2.h + "px",   "important");
-            // transform 복구 (parallax용 CSS 변수 방식)
-            gc2.style.setProperty("transform", "translate3d(var(--plx-x,0px),var(--plx-y,0px),0)", "important");
+
+            // 바로바로! 켜짐(PC) → 중앙 정렬 유지, 모바일은 원위치
+            var alCenter = document.body.classList.contains("always-listen-center");
+            if (alCenter && !isMob2) {
+              gc2.style.setProperty("left",      "50%",                                         "important");
+              gc2.style.setProperty("right",     "auto",                                        "important");
+              gc2.style.setProperty("transform", "translateX(-50%) scale(1.1) translate3d(0px,0px,0)", "important");
+            } else {
+              gc2.style.removeProperty("left");
+              gc2.style.setProperty("right",     "0",                                           "important");
+              // transform 복구 (parallax용 CSS 변수 방식)
+              gc2.style.setProperty("transform", "translate3d(var(--plx-x,0px),var(--plx-y,0px),0)", "important");
+            }
+
             if (g2) {
               g2.style.setProperty("width",  sz2.w + "px", "important");
               g2.style.setProperty("height", sz2.h + "px", "important");

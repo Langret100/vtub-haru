@@ -12,7 +12,8 @@
       // 게임 감정 이벤트 → 부모 Live2D로 전달
       if (data && data.type === "GAME_REACT") {
         if (typeof global.gameReact === "function") {
-          try { global.gameReact(data.eventType); } catch(e) {}
+          // line 필드를 함께 전달해 TTS가 말풍선과 동일한 대사를 읽도록 함
+          try { global.gameReact(data.eventType, data.line || ""); } catch(e) {}
         }
         return;
       }

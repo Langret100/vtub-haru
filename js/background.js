@@ -77,39 +77,42 @@ function initBackgroundSystem() {
         }
       }
 
-      /* ── 방송방 입력창 바다색 테마 ── */
+      /* ── 방송방 입력창 Aero 테마 ── */
       body.broadcast-room-mode #inputRow {
-        background: linear-gradient(135deg,
-          rgba(60, 150, 210, 0.38) 0%,
-          rgba(90, 190, 240, 0.32) 50%,
-          rgba(50, 160, 220, 0.38) 100%) !important;
-        border: 1px solid rgba(140, 220, 255, 0.55) !important;
+        background: rgba(40,100,180,0.65) !important;
+        border: 1px solid rgba(100,180,255,0.65) !important;
         box-shadow:
-          0 8px 32px rgba(0, 120, 200, 0.18),
-          inset 0 1px 0 rgba(200, 240, 255, 0.30),
-          inset 0 -1px 0 rgba(30, 100, 160, 0.15) !important;
-        backdrop-filter: blur(24px) !important;
+          inset 0 1px 0 rgba(255,255,255,0.65),
+          inset 0 -1px 0 rgba(0,30,100,0.30),
+          0 12px 36px rgba(0,25,90,0.55),
+          0 3px 10px rgba(0,50,160,0.40) !important;
+        backdrop-filter: blur(32px) saturate(2.2) !important;
+        -webkit-backdrop-filter: blur(32px) saturate(2.2) !important;
       }
       body.broadcast-room-mode #userInput {
-        background: rgba(30, 100, 160, 0.28) !important;
-        border: 1px solid rgba(140, 220, 255, 0.40) !important;
-        color: #e8f8ff !important;
-        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+        background: rgba(0,20,70,0.45) !important;
+        border: 1px solid rgba(100,170,255,0.55) !important;
+        color: #fff !important;
+        text-shadow: 0 1px 2px rgba(0,20,80,0.60) !important;
+        box-shadow: inset 0 1px 3px rgba(0,10,50,0.45) !important;
       }
       body.broadcast-room-mode #userInput::placeholder {
-        color: rgba(180, 230, 255, 0.65) !important;
+        color: rgba(160,210,255,0.55) !important;
       }
       body.broadcast-room-mode #sendBtn {
-        background: linear-gradient(135deg, rgba(50, 160, 220, 0.75) 0%, rgba(30, 120, 190, 0.75) 100%) !important;
-        border: 1px solid rgba(140, 220, 255, 0.55) !important;
-        box-shadow: 0 3px 10px rgba(0, 100, 180, 0.25) !important;
+        background: linear-gradient(180deg, rgba(80,160,255,0.88) 0%, rgba(40,110,230,0.92) 100%) !important;
+        border: 1px solid rgba(120,190,255,0.70) !important;
+        color: #fff !important;
+        text-shadow: 0 1px 2px rgba(0,20,80,0.60) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 3px 10px rgba(0,30,120,0.45) !important;
       }
       body.broadcast-room-mode #sendBtn:hover {
-        background: linear-gradient(135deg, rgba(70, 185, 245, 0.85) 0%, rgba(45, 145, 210, 0.85) 100%) !important;
+        background: linear-gradient(180deg, rgba(100,175,255,0.92) 0%, rgba(60,130,240,0.95) 100%) !important;
       }
       body.broadcast-room-mode #ghostPlus {
-        background: rgba(60, 160, 220, 0.42) !important;
-        border: 1px solid rgba(140, 220, 255, 0.45) !important;
+        background: rgba(80,150,255,0.55) !important;
+        border: 1px solid rgba(120,190,255,0.65) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 2px 8px rgba(0,30,120,0.35) !important;
       }
       .bc-line {
         display: flex;
@@ -277,12 +280,14 @@ function initBackgroundSystem() {
     broadcastChatEl = null;
   }
 
-  function appendBroadcastLine(role, text, displayName) {
+  // isSocial=true 이면 data-social="1" 마커를 달아 소셜챗 라인임을 표시
+  function appendBroadcastLine(role, text, displayName, isSocial) {
     if (!broadcastChatEl) return;
     const MAX_LINES = 30;
 
     const line = document.createElement("div");
     line.className = "bc-line";
+    if (isSocial) line.dataset.social = "1";
 
     const roleSpan = document.createElement("span");
     roleSpan.className = "bc-role " + (role === "user" ? "bc-user" : "bc-ghost");
@@ -349,34 +354,34 @@ function initBackgroundSystem() {
   }
 
   function _syncSocialToOverlay() {
-    // 소셜챗 모드: logEl 내 현재 렌더된 .log-line.social 전체를 오버레이에 반영
+    // 소셜챗 모드: #log 의 .log-line.social 전체를 오버레이에 반영
+    //
+    // ※ renderSocialMessages()는 항상 logEl.innerHTML="" 후 전체 재구성하므로
+    //   count 가 같아도 표시 내용이 바뀔 수 있다 (슬라이딩 윈도우).
+    //   따라서 "새로 추가된 것만 덧붙이는" 증분 방식 대신,
+    //   소셜챗 라인(data-social 마커)을 전부 제거하고 재구성한다.
     if (!broadcastChatEl) return;
     const logEl = document.getElementById("log");
     if (!logEl) return;
     const nodes = logEl.querySelectorAll(".log-line.social");
-    const newCount = nodes.length;
-    if (newCount === _bcLastSocialCount) return;
 
-    // 새로 추가된 노드만 처리 (오버레이 기존 내용 유지, 새 것만 추가)
-    const toAdd = Array.from(nodes).slice(_bcLastSocialCount);
-    _bcLastSocialCount = newCount;
+    // 기존 소셜챗 라인 전체 제거 후 재구성
+    broadcastChatEl.querySelectorAll(".bc-line[data-social]")
+                   .forEach(el => el.remove());
+
+    _bcLastSocialCount = nodes.length;
+    if (nodes.length === 0) return;
 
     const myNicks = _getMyNicknames();
-    toAdd.forEach(function(node) {
+    nodes.forEach(function(node) {
       const roleEl = node.querySelector(".role");
       const roleText = roleEl ? roleEl.textContent.replace(/:\s*$/, "").trim() : "";
-      // 내 닉네임이면 user, 캐릭터 이름이면 ghost
-      let role;
-      if (myNicks.indexOf(roleText) !== -1) {
-        role = "user";
-      } else {
-        role = "ghost";
-      }
+      const role = myNicks.indexOf(roleText) !== -1 ? "user" : "ghost";
       const cloned = node.cloneNode(true);
       const rClone = cloned.querySelector(".role");
       if (rClone) rClone.remove();
       const text = cloned.textContent.trim();
-      if (text) appendBroadcastLine(role, text, roleText);
+      if (text) appendBroadcastLine(role, text, roleText, /* isSocial= */ true);
     });
   }
 
@@ -502,11 +507,23 @@ function initBackgroundSystem() {
     startWallpaperTimer();
     window.addEventListener("ghost:social-mode-changed", _bcOnSocialModeChange);
     try { window.dispatchEvent(new CustomEvent("ghost:broadcast-mode-changed", { detail: { active: true } })); } catch(e) {}
+    // 소셜메신저 iframe에 ae-mode 신호 전송
+    try {
+      var gf = document.getElementById("gameFrame");
+      if (gf && gf.contentWindow) gf.contentWindow.postMessage({ type: "ae-mode", active: true }, "*");
+    } catch(e) {}
   }
 
   function _bcOnSocialModeChange() {
     _bcLastSocialCount = 0;
-    // 전환 직후 현재 logEl 상태 즉시 스캔
+    if (!_isSocialMode()) {
+      // 소셜 모드 종료 → 오버레이에서 소셜챗 라인 정리
+      if (broadcastChatEl) {
+        broadcastChatEl.querySelectorAll(".bc-line[data-social]").forEach(el => el.remove());
+      }
+      return;
+    }
+    // 소셜 모드 진입 → 전환 직후 logEl 상태 즉시 스캔
     setTimeout(function() { _syncSocialToOverlay(); }, 50);
   }
 
@@ -522,6 +539,11 @@ function initBackgroundSystem() {
     stopBroadcastObserver();
     removeBroadcastOverlay();
     try { window.dispatchEvent(new CustomEvent("ghost:broadcast-mode-changed", { detail: { active: false } })); } catch(e) {}
+    // 소셜메신저 iframe에 ae-mode 해제 신호 전송
+    try {
+      var gf = document.getElementById("gameFrame");
+      if (gf && gf.contentWindow) gf.contentWindow.postMessage({ type: "ae-mode", active: false }, "*");
+    } catch(e) {}
   }
   // ─────────────────────────────────────────────────────────────────
 

@@ -159,12 +159,25 @@
     return chosen || null;
   }
 
-  // TTS: 무음 워밍업 utterance로 AudioContext를 미리 선점한 뒤 실제 발화
-  // Chrome은 첫 번째 speak() 시 AudioContext를 초기화하느라 앞부분을 자름.
-  // volume:0 + rate:10 의 워밍업을 먼저 큐잉 → onend에서 실제 텍스트를 이어서 발화.
-  // 이 방식은 cancel() + setTimeout 딜레이가 전혀 없으므로 앞부분 잘림이 발생하지 않음.
+  // TTS speak() - Chrome 앞부분 잘림 & onend 미호출 버그 수정 버전
+  //
+  // [버그 원인 분석]
+  // 구버전은 무음 warm utterance(" ")를 먼저 speak() 후,
+  // warm.onend 콜백에서 실제 발화를 큐잉하는 방식이었음.
+  // Chrome에서 두 가지 문제 발생:
+  //   1) 공백 한 칸(" ") utterance가 onend를 아예 호출 안 하는 경우가 있음
+  //      → 실제 발화 콜백이 영원히 실행되지 않아 무음
+  //   2) cancel() 직후 즉시 speak()하면 AudioContext 초기화 때문에 앞부분 잘림
+  //      → warm 방식으로 해결하려 했으나 1번 버그로 오히려 악화
+  //
+  // [해결책]
+  //   cancel() 후 setTimeout(150ms) 딜레이를 두고 실제 발화.
+  //   150ms는 Chrome AudioContext 초기화 시간으로 앞부분 잘림을 방지.
+  //   warm utterance 제거 → onend 미호출 버그 원천 제거.
+  //   pending 텍스트 패턴으로 speak() 연속 호출 시 마지막 것만 재생.
   var _ttsCurrentUtter = null;
-  var _ttsWarmUtter    = null;
+  var _ttsPendingTimer  = null;
+  var _ttsPendingText   = null;
 
   function speak(text) {
     if (!hasSpeech || !enabled) return;
@@ -172,37 +185,43 @@
 
     var synth = window.speechSynthesis;
 
-    // 기존 콜백 끊기 (이전 사이클 onend가 새 발화를 덮어쓰지 않도록)
-    if (_ttsWarmUtter)    { _ttsWarmUtter.onend = null;    _ttsWarmUtter.onerror = null;    _ttsWarmUtter = null; }
-    if (_ttsCurrentUtter) { _ttsCurrentUtter.onend = null; _ttsCurrentUtter.onerror = null; _ttsCurrentUtter = null; }
+    // 이전 콜백 끊기
+    if (_ttsCurrentUtter) {
+      _ttsCurrentUtter.onend = null;
+      _ttsCurrentUtter.onerror = null;
+      _ttsCurrentUtter.onboundary = null;
+      _ttsCurrentUtter = null;
+    }
+    // 대기 중인 예약 취소 (연속 호출 시 마지막 것만 재생)
+    if (_ttsPendingTimer) {
+      clearTimeout(_ttsPendingTimer);
+      _ttsPendingTimer = null;
+    }
 
     try { synth.cancel(); } catch(e) {}
     try { synth.resume(); } catch(e) {}
 
-    var voice = pickVoiceForUtterance();
-    var lang  = (voice && voice.lang) || "ko-KR";
-    var pitch = mapToneToPitch(toneValue);
-    var rate  = clampRange(mapRateToUtteranceRate(rateValue) * mapToneRateFactor(toneValue), SOUND_MIN, SOUND_MAX, 1.0);
+    _ttsPendingText = text;
 
-    // ① 무음 워밍업: AudioContext 선점용 (들리지 않음)
-    var warm = new window.SpeechSynthesisUtterance(" ");
-    if (voice) warm.voice = voice;
-    warm.lang   = lang;
-    warm.volume = 0;      // 무음
-    warm.rate   = 10;     // 최대 속도 — 즉시 끝남
-    warm.pitch  = 1;
-    _ttsWarmUtter = warm;
+    // cancel() 직후 바로 speak()하면 Chrome이 앞부분을 잘라냄.
+    // 150ms 딜레이로 AudioContext가 안정된 뒤 발화.
+    _ttsPendingTimer = setTimeout(function() {
+      _ttsPendingTimer = null;
+      var pendingText = _ttsPendingText;
+      _ttsPendingText = null;
+      if (!pendingText || !enabled) return;
 
-    // ② 워밍업 끝나면 실제 발화
-    warm.onend = function() {
-      _ttsWarmUtter = null;
-      if (!enabled) return;
+      var voice = pickVoiceForUtterance();
+      var lang  = (voice && voice.lang) || "ko-KR";
+      var pitch = mapToneToPitch(toneValue);
+      var rate  = clampRange(mapRateToUtteranceRate(rateValue) * mapToneRateFactor(toneValue), SOUND_MIN, SOUND_MAX, 1.0);
+
       try {
-        var utter = new window.SpeechSynthesisUtterance(text);
+        var utter = new window.SpeechSynthesisUtterance(pendingText);
         if (voice) utter.voice = voice;
-        utter.lang  = lang;
-        utter.pitch = pitch;
-        utter.rate  = rate;
+        utter.lang   = lang;
+        utter.pitch  = pitch;
+        utter.rate   = rate;
         utter.volume = 1;
         utter.onboundary = function(ev) {
           try { if (typeof window.onLive2DBoundary === "function") window.onLive2DBoundary(ev); } catch(_) {}
@@ -211,47 +230,18 @@
           _ttsCurrentUtter = null;
           try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
         };
-        utter.onerror = function() {
+        utter.onerror = function(ev) {
+          // "interrupted" 는 cancel()로 인한 정상 중단 — 립싱크 종료만
           _ttsCurrentUtter = null;
           try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
         };
         _ttsCurrentUtter = utter;
         try { synth.resume(); } catch(e) {}
         synth.speak(utter);
-        // onstart 대신 speak() 직후 즉시 립싱크 시작 (Chrome에서 onstart 누락 방지)
-        try { if (typeof window.onLive2DStartSpeaking === "function") window.onLive2DStartSpeaking(text); } catch(_) {}
+        // speak() 직후 즉시 립싱크 시작 (onstart는 Chrome에서 누락 가능)
+        try { if (typeof window.onLive2DStartSpeaking === "function") window.onLive2DStartSpeaking(pendingText); } catch(_) {}
       } catch(e) {}
-    };
-    warm.onerror = function() {
-      // 워밍업 실패해도 그냥 직접 발화 시도
-      _ttsWarmUtter = null;
-      if (!enabled) return;
-      try {
-        var utter2 = new window.SpeechSynthesisUtterance(text);
-        if (voice) utter2.voice = voice;
-        utter2.lang  = lang;
-        utter2.pitch = pitch;
-        utter2.rate  = rate;
-        utter2.volume = 1;
-        utter2.onboundary = function(ev) {
-          try { if (typeof window.onLive2DBoundary === "function") window.onLive2DBoundary(ev); } catch(_) {}
-        };
-        utter2.onend   = function() {
-          _ttsCurrentUtter = null;
-          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
-        };
-        utter2.onerror = function() {
-          _ttsCurrentUtter = null;
-          try { if (typeof window.onLive2DStopSpeaking === "function") window.onLive2DStopSpeaking(); } catch(_) {}
-        };
-        _ttsCurrentUtter = utter2;
-        try { synth.resume(); } catch(e) {}
-        synth.speak(utter2);
-        try { if (typeof window.onLive2DStartSpeaking === "function") window.onLive2DStartSpeaking(text); } catch(_) {}
-      } catch(e) {}
-    };
-
-    synth.speak(warm);
+    }, 150);
   }
 
   function refreshLabel(){
@@ -272,7 +262,7 @@
     saveState();
     refreshLabel();
     if (!enabled) {
-      if (_ttsWarmUtter)    { _ttsWarmUtter.onend = null;    _ttsWarmUtter.onerror = null;    _ttsWarmUtter = null; }
+      if (_ttsPendingTimer) { clearTimeout(_ttsPendingTimer); _ttsPendingTimer = null; }
       if (_ttsCurrentUtter) { _ttsCurrentUtter.onend = null; _ttsCurrentUtter.onerror = null; _ttsCurrentUtter = null; }
       try { window.speechSynthesis.cancel(); } catch(e) {}
     }

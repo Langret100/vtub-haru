@@ -91,9 +91,18 @@
     const targetHref = new URL(url, location.href).href;
     const srcAlreadySet = (frame.src === targetHref);
 
+    // 메신저를 열 때 현재 방송방 상태를 iframe에 전달하는 헬퍼
+    function _sendAeModeToMessenger() {
+      if (bgmKey !== "messenger") return;
+      var isBc = document.body.classList.contains("broadcast-room-mode");
+      try { frame.contentWindow.postMessage({ type: "ae-mode", active: isBc }, "*"); } catch(e) {}
+    }
+
     if (srcAlreadySet) {
       // 이미 같은 src → 바로 표시 (프리로드된 경우: 실시간톡 또는 같은 게임 재진입)
       overlay.classList.remove("hidden");
+      // 이미 로드된 iframe이므로 바로 전달
+      setTimeout(_sendAeModeToMessenger, 80);
     } else {
       // src가 달라지는 경우(프리로드된 social-messenger → 게임 등):
       // iframe이 이전 페이지를 보여주는 플리커를 막기 위해
@@ -102,11 +111,13 @@
       var _loadTimer = setTimeout(function() {
         // load 이벤트가 늦거나 안 오는 경우 대비 최대 1.5초 후 강제 표시
         overlay.classList.remove("hidden");
+        _sendAeModeToMessenger();
       }, 1500);
       frame.addEventListener("load", function _onLoad() {
         frame.removeEventListener("load", _onLoad);
         clearTimeout(_loadTimer);
         overlay.classList.remove("hidden");
+        setTimeout(_sendAeModeToMessenger, 80);
       });
     }
     // Live2D 게임모드 크기 즉시 적용 (MutationObserver 타이밍 보완)

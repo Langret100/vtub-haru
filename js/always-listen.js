@@ -37,6 +37,28 @@
 
   function centerGhost(enable){
     document.body.classList.toggle("always-listen-center", !!enable);
+    var gc = document.getElementById("ghostContainer");
+    if (!gc) return;
+    var isMobile = window.innerWidth <= 768;
+    if (enable) {
+      if (isMobile) {
+        // 모바일: 움직이지 않고 원래 위치(오른쪽) 유지
+        gc.style.removeProperty("left");
+        gc.style.setProperty("right",     "0",                                      "important");
+        gc.style.setProperty("bottom",    "0",                                      "important");
+        gc.style.setProperty("transform", "translate3d(var(--plx-x,0px),var(--plx-y,0px),0)", "important");
+      } else {
+        // PC: 수평 중앙으로 이동, 높이 유지
+        gc.style.setProperty("left",      "50%",                                    "important");
+        gc.style.setProperty("right",     "auto",                                   "important");
+        gc.style.setProperty("transform", "translateX(-50%) scale(1.1) translate3d(0px,0px,0)", "important");
+      }
+    } else {
+      // 원래대로 복원
+      gc.style.removeProperty("left");
+      gc.style.setProperty("right",     "0",                                        "important");
+      gc.style.setProperty("transform", "translate3d(var(--plx-x,0px),var(--plx-y,0px),0)", "important");
+    }
   }
 
   function buildOverlay(){
@@ -86,20 +108,15 @@
   async function ensurePermissionByGesture(){
     await refreshPermissionState();
     if (permissionState === 'granted') return true;
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showBubbleSafe('이 브라우저에서는 마이크 권한을 확인할 수 없어요.');
-      return false;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      permissionState = 'granted';
-      try { stream.getTracks().forEach(function(t){ t.stop(); }); } catch(e){}
-      return true;
-    } catch(e) {
-      permissionState = 'denied';
+    // getUserMedia로 권한을 별도 요청하면 SpeechRecognition.start()가 또
+    // 권한 팝업을 띄워 두 번 뜨는 문제가 생깁니다.
+    // 권한이 명시적으로 거부된 경우에만 안내하고, 그 외엔
+    // SpeechRecognition이 직접 권한 요청을 처리하도록 위임합니다.
+    if (permissionState === 'denied') {
       showBubbleSafe('마이크 권한이 허용되지 않았어요. 주소창 옆 마이크 설정에서 허용으로 바꿔 주세요.');
       return false;
     }
+    return true;
   }
 
   function escapeRegExp(value){
